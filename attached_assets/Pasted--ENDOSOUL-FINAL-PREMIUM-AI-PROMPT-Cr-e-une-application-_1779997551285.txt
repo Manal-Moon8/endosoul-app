@@ -1,0 +1,198 @@
+# ENDOSOUL — FINAL PREMIUM AI PROMPT
+
+Crée une application mobile premium française appelée **EndoSoul**, dédiée au bien-être féminin et à l’accompagnement des femmes atteintes d’endométriose.
+
+L’univers visuel doit être :
+
+* spirituel
+* féminin
+* émotionnel
+* élégant
+* premium
+* inspiré des applications Apple haut de gamme
+
+## Direction artistique
+
+Utilise comme inspiration principale :
+
+* lotus violet et doré
+* lumière douce
+* ambiance zen
+* tissus satinés violets
+* glow lumineux subtil
+* esthétique premium Apple + wellness féminin
+
+Palette :
+
+* violet profond
+* lavande pastel
+* doré doux
+* noir premium
+* blanc cassé
+
+Évite absolument :
+
+* couleurs agressives
+* interfaces trop flashy
+* design “cheap”
+* style Android basique
+
+Le design doit être :
+
+* minimaliste
+* immersif
+* fluide
+* émotionnel
+* luxueux
+
+---
+
+# LOGO & IDENTITÉ
+
+Utilise le lotus doré visible dans l’image de référence comme logo principal officiel de l’application.
+
+Le logo doit apparaître :
+
+* sur le splash screen
+* sur l’écran d’accueil
+* dans la navigation
+* dans le profil
+* dans les écrans onboarding
+
+Ajoute aussi des détails lotus subtils dans l’interface.
+
+Le logo doit être :
+
+* élégant
+* raffiné
+* premium
+* spirituel
+* féminin
+
+---
+
+# SPLASH SCREEN
+
+Créer un splash screen immersif avec :
+
+* grand lotus doré centré
+* halo lumineux doux derrière le logo
+* animation lente et élégante
+* particules lumineuses discrètes
+* ambiance méditative premium
+* slogan lisible :
+  “Prenez soin de votre corps et de votre âme”
+
+Le bouton “Commencer” doit avoir :
+
+* glassmorphism
+* glow violet subtil
+* ombre élégante
+* animation hover premium
+* style Apple moderne
+
+---
+
+# PERSONA
+
+Remplacer le prénom “Sophie” par “Nour” dans toute l’application pour correspondre au persona marketing du projet.
+
+---
+
+# FONCTIONNALITÉS PRINCIPALES
+
+Créer les écrans suivants :
+
+1. Accueil
+2. Suivi du cycle
+3. Symptômes
+4. Humeur & fatigue
+5. Méditation & Reiki
+6. Sérénité / respiration
+7. Communauté
+8. Profil premium
+9. Onboarding émotionnel
+10. Notifications & rappels
+
+---
+
+# MÉDITATION
+
+Ajouter :
+
+* musique relaxante réelle
+* bouton Play/Pause fonctionnel
+* ambiance sonore zen
+* animation respiratoire douce
+* transitions lentes et apaisantes
+
+---
+
+# EXPÉRIENCE UTILISATEUR
+
+Je veux :
+
+* transitions ultra fluides entre les écrans
+* micro-interactions premium
+* animations élégantes
+* navigation moderne type iOS
+* sensation immersive et émotionnelle
+
+Le prototype doit donner l’impression d’une vraie application startup premium prête pour un lancement.
+
+---
+
+# LANDING PAGE PREMIUM
+
+Créer aussi une landing page moderne pour présenter EndoSoul.
+
+La landing page doit contenir :
+
+## Hero Section
+
+* slogan émotionnel
+* mockup géant du téléphone
+* lumière immersive
+* CTA premium
+
+## Sections
+
+* présentation des fonctionnalités
+* statistiques sur l’endométriose
+* chiffres clés
+* témoignages
+* communauté
+* version premium
+* méditation & bien-être
+* prototype interactif
+
+## CTA
+
+Bouton :
+“Tester le prototype”
+
+Ajouter aussi :
+
+* QR code fictif
+* footer premium
+* design cohérent avec l’application
+
+---
+
+# STYLE GLOBAL
+
+Inspirations :
+
+* Apple Health
+* Calm
+* Headspace
+* applications wellness premium
+
+Le rendu final doit sembler :
+
+* réaliste
+* prêt pour investisseurs
+* startup luxe wellness
+* émotionnel et crédible
+
+Créer une expérience visuelle forte et mémorable.

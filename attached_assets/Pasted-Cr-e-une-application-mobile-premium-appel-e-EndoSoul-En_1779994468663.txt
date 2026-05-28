@@ -1,0 +1,107 @@
+Crée une application mobile premium appelée EndoSoul.
+
+EndoSoul est une application de bien-être féminin dédiée à l’accompagnement global des femmes concernées par l’endométriose et les douleurs chroniques féminines.
+
+L’application doit être entièrement en français.
+
+Style visuel :
+- application mobile premium
+- ambiance féminine, douce, rassurante et holistique
+- couleurs principales : violet doux, violet profond, rose clair, blanc et or
+- design minimaliste, élégant, moderne
+- cartes arrondies
+- ombres douces
+- animations fluides
+- expérience utilisateur très calme et professionnelle
+- inspiration : FemTech, méditation, bien-être, Apple Health, Calm, Flo
+
+Couleurs :
+- violet doux : #C7A7FF
+- violet profond : #6C3DBA
+- or : #E4B008
+- blanc : #FFFFFF
+- noir texte : #000000
+
+Crée un prototype interactif mobile-first avec navigation entre plusieurs écrans.
+
+Écrans à créer :
+
+1. Écran d’accueil / onboarding
+- logo EndoSoul
+- slogan : “Prenez soin de votre corps et de votre âme”
+- bouton : “Commencer”
+
+2. Connexion / inscription
+- continuer avec Google
+- continuer avec Apple
+- inscription par email
+
+3. Tableau de bord
+- Bonjour
+- comment te sens-tu aujourd’hui ?
+- humeur
+- douleur
+- fatigue
+- énergie
+- recommandations du jour
+
+4. Suivi du cycle
+- calendrier menstruel
+- phase du cycle
+- symptômes fréquents
+- aperçu du cycle
+
+5. Suivi des symptômes
+- douleur sur 10
+- fatigue sur 10
+- humeur
+- énergie
+- bouton enregistrer
+
+6. Méditation et Reiki
+- respiration lunaire
+- ancrage
+- lâcher-prise
+- sommeil réparateur
+- lecteur audio
+
+7. Sérénité
+- minuteur 5 minutes
+- respiration guidée
+- musique douce
+
+8. Espace communauté
+- discussions anonymes
+- soutien entre femmes
+- témoignages positifs
+
+9. Praticiens partenaires
+- liste de praticiens bien-être
+- fiche profil
+- bouton prendre rendez-vous
+
+10. Offre Premium
+- modèle freemium
+- accès aux programmes complets
+- méditations avancées
+- accompagnement personnalisé
+
+11. Profil et paramètres
+- profil
+- rappels
+- confidentialité RGPD
+- paramètres
+- se déconnecter
+
+Exigences techniques :
+- utiliser React
+- utiliser Tailwind CSS
+- design responsive mobile
+- navigation interactive entre les écrans
+- interface réaliste comme une vraie application
+- pas de backend nécessaire
+- pas de base de données nécessaire
+- seulement un prototype visuel interactif
+
+Important :
+Le résultat doit ressembler à une vraie application FemTech premium prête à être présentée à un jury de Master 2.
