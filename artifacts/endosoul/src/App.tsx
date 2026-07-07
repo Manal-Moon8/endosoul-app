@@ -5,6 +5,7 @@ import * as Screens from './screens';
 import * as Screens2 from './screens2';
 import LandingPage from './LandingPage';
 import logoImg from '@assets/logo_1779998926197.png';
+import lotusPhoto from '@assets/louts_1783417437105.png';
 
 export type ScreenId =
   | 'onboarding'
@@ -30,76 +31,170 @@ const EASE_OUT = [0.23, 1, 0.32, 1] as const;
 
 function SplashScreen({ onDone }: { onDone: () => void }) {
   useEffect(() => {
-    const t = setTimeout(onDone, 2800);
+    const t = setTimeout(onDone, 3200);
     return () => clearTimeout(t);
   }, [onDone]);
+
+  /* floating particle positions — stable, no random() at render time */
+  const PARTICLES = [
+    { x: '18%', y: '22%', s: 3, d: 0.3 },
+    { x: '75%', y: '15%', s: 2, d: 0.7 },
+    { x: '88%', y: '55%', s: 4, d: 0.5 },
+    { x: '12%', y: '68%', s: 2, d: 1.1 },
+    { x: '55%', y: '82%', s: 3, d: 0.9 },
+    { x: '32%', y: '40%', s: 2, d: 1.4 },
+    { x: '68%', y: '35%', s: 3, d: 0.2 },
+    { x: '44%', y: '12%', s: 2, d: 0.6 },
+    { x: '82%', y: '78%', s: 4, d: 1.0 },
+    { x: '24%', y: '88%', s: 2, d: 0.4 },
+  ];
 
   return (
     <motion.div
       key="splash"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      exit={{ opacity: 0, scale: 1.04 }}
-      transition={{ duration: 0.5, ease: EASE_OUT }}
+      exit={{ opacity: 0, scale: 1.06 }}
+      transition={{ duration: 0.65, ease: EASE_OUT }}
       style={{
         position: 'fixed', inset: 0, zIndex: 200,
-        background: 'linear-gradient(170deg, #04000F 0%, #130535 30%, #2A1266 60%, #4A2899 85%, #6B3DBE 100%)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: 'linear-gradient(170deg, #04000F 0%, #0D0228 25%, #1E0A50 50%, #2D1B69 75%, #3D2280 100%)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
       }}
     >
-      <motion.div
-        animate={{ scale: [1, 1.22, 1], opacity: [0.35, 0.75, 0.35] }}
-        transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
-        style={{
-          position: 'absolute', top: '50%', left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: 440, height: 440, borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(228,176,8,0.2) 0%, rgba(108,61,186,0.25) 50%, transparent 75%)',
-          pointerEvents: 'none',
-        }}
-      />
-      <motion.div
-        animate={{ scale: [0.9, 1.55], opacity: [0.3, 0] }}
-        transition={{ duration: 3, repeat: Infinity, ease: 'easeOut' }}
-        style={{
-          position: 'absolute', top: '50%', left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: 260, height: 260, borderRadius: '50%',
-          border: '1px solid rgba(228,176,8,0.4)',
-          pointerEvents: 'none',
-        }}
-      />
-      <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 10 }}>
-        <motion.img
-          src={logoImg} alt="EndoSoul"
-          initial={{ scale: 0.45, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.2, duration: 1.3, ease: EASE_OUT }}
+      {/* Floating particles */}
+      {PARTICLES.map((p, i) => (
+        <motion.div
+          key={i}
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ opacity: [0, 0.8, 0], scale: [0, 1, 0], y: [0, -30, -60] }}
+          transition={{ delay: 0.8 + p.d, duration: 2.4, repeat: Infinity, repeatDelay: p.d * 0.5, ease: 'easeOut' }}
           style={{
-            width: 148, height: 148, objectFit: 'contain',
-            filter: 'drop-shadow(0 0 36px rgba(228,176,8,0.85)) drop-shadow(0 0 72px rgba(184,146,255,0.5))',
+            position: 'absolute', left: p.x, top: p.y,
+            width: p.s, height: p.s, borderRadius: '50%',
+            background: '#E4B008', boxShadow: `0 0 ${p.s * 3}px rgba(228,176,8,0.9)`,
+            pointerEvents: 'none',
           }}
         />
+      ))}
+
+      {/* Breathing outer glow — calm pulsation */}
+      <motion.div
+        animate={{ scale: [1, 1.18, 1], opacity: [0.2, 0.5, 0.2] }}
+        transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+        style={{
+          position: 'absolute', top: '50%', left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: 500, height: 500, borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(184,146,255,0.22) 0%, rgba(108,61,186,0.15) 50%, transparent 75%)',
+          pointerEvents: 'none',
+        }}
+      />
+
+      {/* Expanding ring */}
+      <motion.div
+        initial={{ scale: 0.6, opacity: 0.6 }}
+        animate={{ scale: 1.8, opacity: 0 }}
+        transition={{ delay: 0.5, duration: 2.5, ease: 'easeOut' }}
+        style={{
+          position: 'absolute', top: '50%', left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: 220, height: 220, borderRadius: '50%',
+          border: '1px solid rgba(228,176,8,0.5)', pointerEvents: 'none',
+        }}
+      />
+
+      {/* Core content */}
+      <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 10 }}>
+
+        {/* Lotus flower — "opens" from closed (small, dark) to full bloom */}
+        <div style={{ position: 'relative', width: 220, height: 220, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+
+          {/* Golden inner glow that grows as lotus opens */}
+          <motion.div
+            initial={{ scale: 0.1, opacity: 0 }}
+            animate={{ scale: [0.1, 0.5, 1.2], opacity: [0, 0.6, 0.3] }}
+            transition={{ delay: 0.1, duration: 2.2, ease: EASE_OUT }}
+            style={{
+              position: 'absolute',
+              width: 180, height: 180, borderRadius: '50%',
+              background: 'radial-gradient(circle, rgba(228,176,8,0.55) 0%, rgba(184,146,255,0.3) 45%, transparent 70%)',
+              pointerEvents: 'none',
+            }}
+          />
+
+          {/* Lotus photo — starts dark/small (closed), blooms open */}
+          <motion.img
+            src={lotusPhoto}
+            alt=""
+            aria-hidden
+            initial={{ scale: 0.28, opacity: 0, filter: 'brightness(0.08) saturate(0)' }}
+            animate={{
+              scale: [0.28, 0.65, 1],
+              opacity: [0, 0.7, 1],
+              filter: [
+                'brightness(0.08) saturate(0)',
+                'brightness(0.55) saturate(0.6)',
+                'brightness(1.05) saturate(1.15)',
+              ],
+            }}
+            transition={{ delay: 0.05, duration: 2.0, ease: EASE_OUT }}
+            style={{
+              width: 200, height: 200, objectFit: 'contain', position: 'relative', zIndex: 2,
+              filter: 'drop-shadow(0 0 40px rgba(228,176,8,0.7)) drop-shadow(0 0 80px rgba(184,146,255,0.45))',
+            }}
+          />
+
+          {/* Gold logo icon emerges from lotus center */}
+          <motion.img
+            src={logoImg}
+            alt="EndoSoul"
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 1.55, duration: 0.9, ease: EASE_OUT }}
+            style={{
+              position: 'absolute', width: 56, height: 56, objectFit: 'contain', zIndex: 3,
+              filter: 'drop-shadow(0 0 18px rgba(228,176,8,1)) drop-shadow(0 0 36px rgba(228,176,8,0.6))',
+            }}
+          />
+        </div>
+
+        {/* Brand name + slogan fade in after lotus opens */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.9, duration: 0.9, ease: EASE_OUT }}
-          style={{ textAlign: 'center', marginTop: 24 }}
+          transition={{ delay: 1.9, duration: 0.85, ease: EASE_OUT }}
+          style={{ textAlign: 'center', marginTop: 20 }}
         >
-          <h1 style={{ fontFamily: "'Playfair Display', serif", color: 'white', fontSize: '2.1rem', fontWeight: 500, marginBottom: 6 }}>
+          <h1 style={{
+            fontFamily: "'Playfair Display', serif",
+            color: 'white', fontSize: '2rem', fontWeight: 500, marginBottom: 4,
+            textShadow: '0 0 30px rgba(184,146,255,0.4)',
+          }}>
             EndoSoul
           </h1>
-          <p style={{ color: 'rgba(228,176,8,0.92)', fontSize: '0.78rem', letterSpacing: '0.22em', textTransform: 'uppercase' }}>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 2.25, duration: 0.8 }}
+            style={{
+              color: 'rgba(228,176,8,0.95)', fontSize: '0.72rem',
+              letterSpacing: '0.26em', textTransform: 'uppercase',
+              textShadow: '0 0 14px rgba(228,176,8,0.5)',
+            }}
+          >
             Lumière sur ta guérison
-          </p>
+          </motion.p>
         </motion.div>
+
+        {/* Decorative line */}
         <motion.div
           initial={{ scaleX: 0, opacity: 0 }}
           animate={{ scaleX: 1, opacity: 1 }}
-          transition={{ delay: 1.5, duration: 1.0, ease: EASE_OUT }}
+          transition={{ delay: 2.5, duration: 0.9, ease: EASE_OUT }}
           style={{
-            width: 90, height: 1, marginTop: 28,
-            background: 'linear-gradient(90deg, transparent, rgba(228,176,8,0.65), transparent)',
+            width: 80, height: 1, marginTop: 20,
+            background: 'linear-gradient(90deg, transparent, rgba(228,176,8,0.7), transparent)',
           }}
         />
       </div>

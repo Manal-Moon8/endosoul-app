@@ -105,185 +105,130 @@ const HealthRing = ({ score }: { score: number }) => {
 };
 
 /* ─────────────────────────────────────────────────────────────────
-   ONBOARDING — 3 interactive steps
+   ONBOARDING — single premium welcome screen
 ───────────────────────────────────────────────────────────────── */
-export const Onboarding = ({ navigate }: { navigate: (s: ScreenId) => void }) => {
-  const [step, setStep] = useState(0);
+export const Onboarding = ({ navigate }: { navigate: (s: ScreenId) => void }) => (
+  <motion.div
+    key="onboarding-wrapper"
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0, scale: 0.97 }}
+    transition={{ duration: 0.5 }}
+    className="absolute inset-0 rounded-[36px] overflow-hidden flex flex-col"
+    style={{ background: 'linear-gradient(170deg, #04000F 0%, #130535 30%, #2D1B69 65%, #4A2899 100%)' }}
+  >
+    {/* ── Lotus hero — fills top 55% ── */}
+    <div className="relative flex-shrink-0" style={{ height: '55%' }}>
+      {/* Ambient glow behind lotus */}
+      <motion.div
+        animate={{ scale: [1, 1.14, 1], opacity: [0.45, 0.8, 0.45] }}
+        transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+        className="absolute inset-0 pointer-events-none"
+        style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 80%, rgba(184,146,255,0.35) 0%, rgba(228,176,8,0.12) 50%, transparent 80%)' }}
+      />
+      {/* Lotus photo — full width, cropped cleanly */}
+      <motion.img
+        src={lotusImg}
+        alt=""
+        aria-hidden
+        initial={{ scale: 1.12, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 1.2, ease: EASE_OUT }}
+        className="w-full h-full object-cover object-center"
+        style={{ filter: 'drop-shadow(0 20px 40px rgba(45,27,105,0.9))' }}
+      />
+      {/* Bottom vignette to blend into card */}
+      <div
+        className="absolute bottom-0 inset-x-0 h-28 pointer-events-none"
+        style={{ background: 'linear-gradient(to bottom, transparent, #2D1B69)' }}
+      />
+    </div>
 
-  const slides = [
-    {
-      title: 'Comprendre ton cycle',
-      desc: "Suivez votre santé simplement.",
-      color: '#B892FF',
-      bg: 'linear-gradient(170deg, #04000F 0%, #130535 35%, #2A1266 65%, #4A2899 85%, #6B3DBE 100%)',
-    },
-    {
-      title: 'Suivre vos symptômes',
-      desc: "Visualisez votre évolution chaque jour.",
-      color: '#E4B008',
-      bg: 'linear-gradient(170deg, #0A0020 0%, #1E0A50 35%, #3A1A80 65%, #5A2DAA 85%, #8A5DDA 100%)',
-    },
-    {
-      title: 'Retrouver votre bien-être',
-      desc: "Méditation, soutien et praticiens spécialisés.",
-      color: '#E4B008',
-      bg: 'linear-gradient(170deg, #080015 0%, #150430 35%, #2D1B69 65%, #7C4DCC 85%, #A882F0 100%)',
-    },
-  ];
-
-  const slide = slides[step];
-
-  return (
+    {/* ── Bottom card ── */}
     <motion.div
-      key="onboarding-wrapper"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0, scale: 0.97 }}
-      transition={{ duration: 0.5 }}
-      className="absolute inset-0 rounded-[36px] overflow-hidden"
-      style={{ background: slide.bg }}
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.3, duration: 0.8, ease: EASE_OUT }}
+      className="flex-1 flex flex-col items-center px-8 pt-4 pb-8"
     >
-      {/* Ambient glows */}
-      <div className="absolute inset-0 pointer-events-none">
-        <motion.div
-          animate={{ scale: [1, 1.15, 1], opacity: [0.5, 0.9, 0.5] }}
-          transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[65%] w-80 h-80 rounded-full"
-          style={{ background: `radial-gradient(circle, ${slide.color}22 0%, rgba(108,61,186,0.15) 50%, transparent 75%)` }}
-        />
-        <div className="absolute top-[4%] left-[-5%] w-52 h-52 bg-[#B892FF]/8 rounded-full blur-3xl" />
-        <div className="absolute bottom-[15%] right-[-5%] w-64 h-64 bg-[#4A2899]/20 rounded-full blur-3xl" />
-      </div>
+      {/* Logo icon + brand */}
+      <motion.img
+        src={logoImg}
+        alt="EndoSoul"
+        initial={{ scale: 0.5, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: 0.5, duration: 0.8, ease: EASE_OUT }}
+        className="w-12 h-12 object-contain mb-3"
+        style={{ filter: 'drop-shadow(0 0 16px rgba(228,176,8,0.8))' }}
+      />
 
-      {/* Ghost logo watermark */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ paddingBottom: 80 }}>
-        <img src={logoImg} alt="" aria-hidden className="w-72 h-72 object-contain opacity-[0.03]"
-          style={{ filter: 'brightness(0) invert(1)' }} />
-      </div>
+      <motion.h1
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.65, duration: 0.6 }}
+        className="font-serif text-white text-3xl font-medium mb-1 text-center"
+      >
+        EndoSoul
+      </motion.h1>
 
-      {/* Logo + brand */}
-      <div className="absolute top-14 inset-x-0 flex flex-col items-center gap-1 z-10">
-        <motion.img
-          src={logoImg} alt="EndoSoul"
-          initial={{ scale: 0.7, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 1.0, ease: EASE_OUT }}
-          className="w-10 h-10 object-contain"
-          style={{ filter: 'drop-shadow(0 0 10px rgba(228,176,8,0.6))' }}
-        />
-        <span className="text-[#E4B008]/80 text-[10px] tracking-[0.3em] uppercase font-medium">EndoSoul</span>
-      </div>
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.78, duration: 0.6 }}
+        className="text-[#E4B008] text-[11px] tracking-[0.28em] uppercase mb-5 text-center"
+      >
+        Lumière sur ta guérison
+      </motion.p>
 
-      {/* Step content */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={step}
-          initial={{ opacity: 0, x: 40 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -40 }}
-          transition={{ duration: 0.45, ease: EASE_OUT }}
-          className="absolute inset-0 flex flex-col items-center justify-center px-8 pb-24 z-10"
-        >
-          {/* Large lotus illustration */}
-          <motion.div
-            initial={{ scale: 0.55, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.08, duration: 0.85, ease: EASE_OUT }}
-            className="relative mb-8 flex items-center justify-center"
-          >
-            <motion.div
-              animate={{ scale: [1, 1.12, 1], opacity: [0.3, 0.6, 0.3] }}
-              transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-              className="absolute w-64 h-64 rounded-full"
-              style={{ background: `radial-gradient(circle, ${slide.color}25 0%, transparent 70%)` }}
-            />
-            <img
-              src={lotusImg}
-              alt=""
-              aria-hidden
-              className="w-52 h-52 object-contain relative z-10"
-              style={{ filter: `drop-shadow(0 0 32px ${slide.color}60) drop-shadow(0 8px 24px rgba(0,0,0,0.4))` }}
-            />
-          </motion.div>
+      <motion.p
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.9, duration: 0.6 }}
+        className="text-white/60 text-[13px] text-center leading-relaxed mb-6 max-w-[280px]"
+      >
+        Suivez votre cycle, comprenez vos symptômes, prenez soin de votre bien-être et avancez avec un accompagnement personnalisé.
+      </motion.p>
 
-          <motion.h1
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.22, duration: 0.6, ease: EASE_OUT }}
-            className="text-3xl font-serif text-white text-center mb-4 leading-tight"
-          >
-            {slide.title}
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.32, duration: 0.6 }}
-            className="text-white/60 text-center text-base leading-relaxed max-w-[260px]"
-          >
-            {slide.desc}
-          </motion.p>
-        </motion.div>
-      </AnimatePresence>
-
-      {/* Bottom controls */}
-      <div className="absolute bottom-0 inset-x-0 pb-10 px-8 z-20 flex flex-col items-center gap-5">
-        {/* Progress dots */}
-        <div className="flex gap-2">
-          {slides.map((_, i) => (
-            <motion.div
-              key={i}
-              animate={{ width: i === step ? 24 : 8, opacity: i === step ? 1 : 0.35 }}
-              transition={SPRING}
-              className="h-2 rounded-full"
-              style={{ backgroundColor: i === step ? slide.color : 'rgba(255,255,255,0.4)' }}
-            />
-          ))}
-        </div>
-
-        {/* CTA */}
+      {/* CTA buttons */}
+      <motion.div
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 1.05, duration: 0.6 }}
+        className="w-full flex flex-col gap-3"
+      >
         <motion.button
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 0.6 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => {
-            if (step < slides.length - 1) setStep(s => s + 1);
-            else navigate('auth');
-          }}
-          data-testid={step === slides.length - 1 ? 'btn-commencer' : `btn-step-${step}`}
-          className="w-full py-4 rounded-full text-base font-semibold text-white relative overflow-hidden"
+          whileTap={{ scale: 0.96 }}
+          data-testid="btn-commencer"
+          onClick={() => navigate('auth')}
+          className="w-full py-4 rounded-full font-semibold text-[15px] text-white"
           style={{
-            background: step === slides.length - 1
-              ? 'linear-gradient(135deg, #E4B008 0%, #C49B00 100%)'
-              : 'rgba(255,255,255,0.15)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255,255,255,0.2)',
-            boxShadow: step === slides.length - 1
-              ? '0 8px 32px rgba(228,176,8,0.4)'
-              : '0 4px 20px rgba(0,0,0,0.2)',
+            background: 'linear-gradient(135deg, #7C4DCC 0%, #4A2899 100%)',
+            boxShadow: '0 8px 32px rgba(108,61,186,0.45)',
+            border: '1px solid rgba(184,146,255,0.25)',
           }}
         >
-          {step === slides.length - 1 ? "Commencer mon parcours ✦" : "Suivant"}
+          Commencer
         </motion.button>
 
-        {step > 0 && (
-          <button onClick={() => setStep(s => s - 1)} className="text-white/40 text-sm">
-            Retour
-          </button>
-        )}
-        {step === 0 && (
-          <button onClick={() => navigate('auth')} className="text-white/30 text-sm">
-            Passer
-          </button>
-        )}
-      </div>
+        <motion.button
+          whileTap={{ scale: 0.96 }}
+          onClick={() => navigate('auth')}
+          className="w-full py-4 rounded-full font-semibold text-[15px] text-white/70"
+          style={{
+            background: 'rgba(255,255,255,0.07)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255,255,255,0.14)',
+          }}
+        >
+          Se connecter
+        </motion.button>
+      </motion.div>
     </motion.div>
-  );
-};
+  </motion.div>
+);
 
 /* ─────────────────────────────────────────────────────────────────
-   AUTH
+   AUTH — minimal, 3 buttons only
 ───────────────────────────────────────────────────────────────── */
 export const Auth = ({ navigate }: { navigate: (s: ScreenId) => void }) => (
   <motion.div
@@ -291,120 +236,91 @@ export const Auth = ({ navigate }: { navigate: (s: ScreenId) => void }) => (
     animate={{ opacity: 1 }}
     exit={{ opacity: 0, scale: 0.97 }}
     transition={{ duration: 0.5, ease: EASE_OUT }}
-    className="absolute inset-0 flex flex-col rounded-[36px] overflow-hidden"
-    style={{ background: 'linear-gradient(170deg, #08001E 0%, #1E0545 30%, #2D1B69 60%, #F5F0FF 100%)' }}
+    className="absolute inset-0 flex flex-col items-center justify-center rounded-[36px] overflow-hidden px-8"
+    style={{ background: 'linear-gradient(170deg, #04000F 0%, #0D0228 30%, #1E0A50 60%, #2D1B69 100%)' }}
   >
-    {/* Ambient glow behind lotus */}
+    {/* Subtle ambient glow */}
     <motion.div
-      animate={{ scale: [1, 1.15, 1], opacity: [0.5, 0.85, 0.5] }}
-      transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-      className="absolute top-0 left-1/2 -translate-x-1/2 w-72 h-72 rounded-full pointer-events-none"
-      style={{ background: 'radial-gradient(circle, rgba(184,146,255,0.35) 0%, rgba(228,176,8,0.15) 40%, transparent 70%)' }}
+      animate={{ scale: [1, 1.2, 1], opacity: [0.18, 0.38, 0.18] }}
+      transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+      className="absolute inset-0 pointer-events-none"
+      style={{ background: 'radial-gradient(ellipse 60% 50% at 50% 40%, rgba(184,146,255,0.25) 0%, transparent 70%)' }}
     />
 
-    {/* Hero — Lotus illustration top half */}
-    <div className="relative flex-shrink-0 flex justify-center items-end" style={{ height: '46%' }}>
-      <motion.img
-        src={lotusImg}
-        alt=""
-        aria-hidden
-        initial={{ scale: 0.7, opacity: 0, y: 20 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        transition={{ duration: 1.1, ease: EASE_OUT }}
-        className="w-72 h-72 object-contain"
-        style={{ filter: 'drop-shadow(0 0 48px rgba(184,146,255,0.7)) drop-shadow(0 16px 32px rgba(0,0,0,0.5))' }}
-      />
-    </div>
-
-    {/* Bottom card */}
+    {/* Logo + brand */}
     <motion.div
-      initial={{ opacity: 0, y: 40 }}
+      initial={{ opacity: 0, y: -16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.25, duration: 0.7, ease: EASE_OUT }}
-      className="flex-1 mx-3 mb-3 rounded-[36px] flex flex-col px-8 pt-7 pb-6"
-      style={{ background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(40px)' }}
+      transition={{ duration: 0.7, ease: EASE_OUT }}
+      className="flex flex-col items-center mb-12 relative z-10"
     >
-      {/* Logo + brand */}
-      <div className="flex flex-col items-center mb-6">
-        <motion.img
-          src={logoImg}
-          alt="EndoSoul"
-          initial={{ scale: 0.6, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.45, duration: 0.8, ease: EASE_OUT }}
-          className="w-14 h-14 object-contain mb-2"
-          style={{ filter: 'drop-shadow(0 0 12px rgba(228,176,8,0.55))' }}
-        />
-        <motion.p
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6, duration: 0.6 }}
-          className="font-serif text-[#6C3DBA] text-lg text-center leading-snug"
-        >
-          Lumière sur ta guérison
-        </motion.p>
-        <motion.div
-          initial={{ opacity: 0, scale: 0.5 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.72, duration: 0.7, ease: EASE_OUT }}
-          className="mt-3 w-5 h-5"
-        >
-          <img src={logoImg} alt="" aria-hidden className="w-full h-full object-contain"
-            style={{ filter: 'sepia(1) saturate(4) hue-rotate(-20deg) brightness(0.85) drop-shadow(0 0 4px rgba(228,176,8,0.6))' }} />
-        </motion.div>
-      </div>
-
-      {/* Auth buttons */}
-      <div className="space-y-3 flex-1">
-        <motion.button
-          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.75, duration: 0.5 }}
-          whileTap={{ scale: 0.97 }}
-          data-testid="btn-google"
-          onClick={() => navigate('dashboard')}
-          className="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 text-[#2D1B69] py-3.5 rounded-2xl shadow-sm"
-          style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.07)' }}
-        >
-          <FaGoogle className="text-[#DB4437]" size={18} />
-          <span className="font-semibold text-sm">Continuer avec Google</span>
-        </motion.button>
-
-        <motion.button
-          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.82, duration: 0.5 }}
-          whileTap={{ scale: 0.97 }}
-          data-testid="btn-apple"
-          onClick={() => navigate('dashboard')}
-          className="w-full flex items-center justify-center gap-3 bg-[#1A1A1E] text-white py-3.5 rounded-2xl"
-          style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.18)' }}
-        >
-          <FaApple size={20} />
-          <span className="font-semibold text-sm">Continuer avec Apple</span>
-        </motion.button>
-
-        <div className="flex items-center gap-3 py-1">
-          <div className="h-px bg-[#E9D8FF] flex-1" />
-          <span className="text-xs text-[#8B7BA8]">ou</span>
-          <div className="h-px bg-[#E9D8FF] flex-1" />
-        </div>
-
-        <motion.button
-          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.9, duration: 0.5 }}
-          whileTap={{ scale: 0.97 }}
-          data-testid="btn-email"
-          onClick={() => navigate('dashboard')}
-          className="w-full py-3.5 rounded-2xl font-semibold text-sm text-white"
-          style={{ background: 'linear-gradient(135deg, #B892FF 0%, #6C3DBA 100%)', boxShadow: '0 6px 20px rgba(108,61,186,0.3)' }}
-        >
-          {"S'inscrire avec e-mail"}
-        </motion.button>
-      </div>
-
-      <p className="text-[10px] text-center text-[#8B7BA8] mt-4 leading-relaxed">
-        En continuant, vous acceptez nos CGU et notre Politique de confidentialité RGPD.
-      </p>
+      <img
+        src={logoImg} alt="EndoSoul"
+        className="w-16 h-16 object-contain mb-4"
+        style={{ filter: 'drop-shadow(0 0 20px rgba(228,176,8,0.85)) drop-shadow(0 0 48px rgba(184,146,255,0.4))' }}
+      />
+      <h1 className="font-serif text-white text-2xl font-medium mb-1">EndoSoul</h1>
+      <p className="text-[#E4B008] text-[10px] tracking-[0.3em] uppercase">Lumière sur ta guérison</p>
     </motion.div>
+
+    {/* Auth buttons */}
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.25, duration: 0.65, ease: EASE_OUT }}
+      className="w-full flex flex-col gap-3 relative z-10"
+    >
+      <motion.button
+        whileTap={{ scale: 0.97 }}
+        data-testid="btn-google"
+        onClick={() => navigate('dashboard')}
+        className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl"
+        style={{ background: 'rgba(255,255,255,0.96)', boxShadow: '0 4px 20px rgba(0,0,0,0.18)' }}
+      >
+        <FaGoogle className="text-[#DB4437]" size={18} />
+        <span className="font-semibold text-sm text-[#2D1B69]">Continuer avec Google</span>
+      </motion.button>
+
+      <motion.button
+        whileTap={{ scale: 0.97 }}
+        data-testid="btn-apple"
+        onClick={() => navigate('dashboard')}
+        className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl"
+        style={{ background: '#1A1A1E', boxShadow: '0 4px 20px rgba(0,0,0,0.35)' }}
+      >
+        <FaApple size={20} className="text-white" />
+        <span className="font-semibold text-sm text-white">Continuer avec Apple</span>
+      </motion.button>
+
+      <div className="flex items-center gap-3 py-1">
+        <div className="h-px flex-1" style={{ background: 'rgba(184,146,255,0.2)' }} />
+        <span className="text-[11px] text-white/30">ou</span>
+        <div className="h-px flex-1" style={{ background: 'rgba(184,146,255,0.2)' }} />
+      </div>
+
+      <motion.button
+        whileTap={{ scale: 0.97 }}
+        data-testid="btn-email"
+        onClick={() => navigate('dashboard')}
+        className="w-full py-4 rounded-2xl font-semibold text-sm text-white"
+        style={{
+          background: 'linear-gradient(135deg, #7C4DCC 0%, #4A2899 100%)',
+          boxShadow: '0 6px 24px rgba(108,61,186,0.4)',
+          border: '1px solid rgba(184,146,255,0.2)',
+        }}
+      >
+        {"S'inscrire avec e-mail"}
+      </motion.button>
+    </motion.div>
+
+    <motion.p
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay: 0.55, duration: 0.6 }}
+      className="text-[10px] text-white/25 text-center mt-8 relative z-10 leading-relaxed"
+    >
+      En continuant, vous acceptez nos CGU et notre Politique de confidentialité RGPD.
+    </motion.p>
   </motion.div>
 );
 
