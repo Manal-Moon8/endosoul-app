@@ -1,20 +1,26 @@
 import { useState, useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { 
-  Moon, Anchor, Feather, Star, Play, Pause, 
-  MessageCircle, ThumbsUp, MapPin, Check, ChevronRight, ChevronLeft, Plus,
-  Activity, Shield, Settings, LifeBuoy, LogOut, Bell, BookOpen, Calendar as CalendarIcon, Heart, Volume2
+import {
+  Moon, Anchor, Feather, Star, Play, Pause,
+  MessageCircle, Heart, MapPin, Check, ChevronRight, ChevronLeft, Plus,
+  Activity, Shield, Settings, LifeBuoy, LogOut, Bell, BookOpen,
+  Calendar as CalendarIcon, Volume2, Search, X, Send, Bookmark,
+  TrendingUp, Award, FileText, Zap
 } from 'lucide-react';
 import { FaGoogle, FaApple } from 'react-icons/fa';
 import { ScreenId } from './App';
 import logoImg from '@assets/logo_1779998926197.png';
 import { useAmbientAudio } from './useAmbientAudio';
+import {
+  MOOD_HISTORY, PRACTITIONERS, COMMUNITY_POSTS, STORIES,
+  CYCLE_PHASES, BOOKING_DATES
+} from './data';
 
 const SPRING = { type: 'spring' as const, stiffness: 340, damping: 28 };
 const EASE_OUT = [0.23, 1, 0.32, 1] as const;
 
-const ScreenWrapper = ({ children, className = "", id }: { children: React.ReactNode, className?: string, id?: string }) => (
-  <motion.div 
+const ScreenWrapper = ({ children, className = "", id }: { children: React.ReactNode; className?: string; id?: string }) => (
+  <motion.div
     initial={{ opacity: 0, y: 22, scale: 0.985 }}
     animate={{ opacity: 1, y: 0, scale: 1 }}
     exit={{ opacity: 0, y: -14, scale: 0.985 }}
@@ -26,132 +32,271 @@ const ScreenWrapper = ({ children, className = "", id }: { children: React.React
   </motion.div>
 );
 
+const MusicIcon = ({ className }: { className?: string }) => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" />
+  </svg>
+);
+
+const MoodChart = () => {
+  const maxVal = 10;
+  const barMaxH = 36;
+  const barW = 22;
+  const gap = 8;
+  const svgW = (barW + gap) * 7 - gap;
+  return (
+    <svg width={svgW} height={barMaxH + 18} className="overflow-visible">
+      {MOOD_HISTORY.map((d, i) => {
+        const h = Math.max(4, (d.value / maxVal) * barMaxH);
+        const x = i * (barW + gap);
+        const y = barMaxH - h;
+        const isToday = i === 6;
+        return (
+          <g key={i}>
+            <rect x={x} y={0} width={barW} height={barMaxH} rx={6} fill="#F0E8FF" />
+            <motion.rect
+              x={x} y={y} width={barW} height={h} rx={6}
+              fill={isToday ? '#6C3DBA' : '#B892FF'}
+              initial={{ scaleY: 0, originY: 1 }}
+              animate={{ scaleY: 1 }}
+              transition={{ delay: i * 0.06 + 0.3, duration: 0.5, ease: EASE_OUT }}
+              style={{ transformOrigin: `${x + barW / 2}px ${barMaxH}px` }}
+            />
+            <text x={x + barW / 2} y={barMaxH + 14} textAnchor="middle" fontSize={9} fill={isToday ? '#6C3DBA' : '#8B7BA8'} fontWeight={isToday ? '600' : '400'}>
+              {d.day}
+            </text>
+          </g>
+        );
+      })}
+    </svg>
+  );
+};
+
+const HealthRing = ({ score }: { score: number }) => {
+  const R = 48;
+  const C = 2 * Math.PI * R;
+  return (
+    <svg width={120} height={120} viewBox="0 0 120 120">
+      <defs>
+        <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#B892FF" />
+          <stop offset="100%" stopColor="#E4B008" />
+        </linearGradient>
+      </defs>
+      <circle cx={60} cy={60} r={R} fill="none" stroke="#E9D8FF" strokeWidth={8} />
+      <motion.circle
+        cx={60} cy={60} r={R} fill="none"
+        stroke="url(#ringGrad)" strokeWidth={8} strokeLinecap="round"
+        strokeDasharray={C}
+        initial={{ strokeDashoffset: C }}
+        animate={{ strokeDashoffset: C * (1 - score / 100) }}
+        transition={{ duration: 1.6, ease: EASE_OUT, delay: 0.4 }}
+        transform="rotate(-90 60 60)"
+      />
+      <text x={60} y={55} textAnchor="middle" fontSize={20} fontWeight="700" fill="#2D1B69" fontFamily="'Playfair Display', serif">
+        {score}
+      </text>
+      <text x={60} y={70} textAnchor="middle" fontSize={9} fill="#8B7BA8">
+        /100
+      </text>
+    </svg>
+  );
+};
+
+/* ─────────────────────────────────────────────────────────────────
+   ONBOARDING — 3 interactive steps
+───────────────────────────────────────────────────────────────── */
 export const Onboarding = ({ navigate }: { navigate: (s: ScreenId) => void }) => {
-  const reveal = (delay: number) => ({
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0 },
-    transition: { delay, duration: 0.8, ease: EASE_OUT },
-  });
+  const [step, setStep] = useState(0);
+
+  const slides = [
+    {
+      icon: '🌙',
+      emoji: true,
+      title: 'Comprends ton cycle',
+      subtitle: 'Phase par phase',
+      desc: "Identifie chaque phase de ton cycle, anticipe les crises et comprends les signaux de ton corps.",
+      color: '#B892FF',
+      bg: 'linear-gradient(170deg, #04000F 0%, #130535 35%, #2A1266 65%, #4A2899 85%, #6B3DBE 100%)',
+    },
+    {
+      icon: '📊',
+      emoji: true,
+      title: 'Suis tes symptômes',
+      subtitle: 'Chaque jour compte',
+      desc: "Note ta douleur, ton humeur et ta fatigue. Construis une cartographie précise de ta santé.",
+      color: '#E4B008',
+      bg: 'linear-gradient(170deg, #0A0020 0%, #1E0A50 35%, #3A1A80 65%, #5A2DAA 85%, #8A5DDA 100%)',
+    },
+    {
+      icon: '✨',
+      emoji: true,
+      title: 'Retrouve ton bien-être',
+      subtitle: 'Méditation & soutien',
+      desc: "Méditations guidées, praticiens spécialisés et une communauté bienveillante qui te comprend vraiment.",
+      color: '#E4B008',
+      bg: 'linear-gradient(170deg, #080015 0%, #150430 35%, #2D1B69 65%, #7C4DCC 85%, #A882F0 100%)',
+    },
+  ];
+
+  const slide = slides[step];
 
   return (
     <motion.div
+      key="onboarding-wrapper"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0, scale: 0.97 }}
-      transition={{ duration: 0.6, ease: EASE_OUT }}
-      className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center overflow-hidden rounded-[36px]"
-      style={{ background: 'linear-gradient(170deg, #04000F 0%, #130535 30%, #2A1266 60%, #4A2899 85%, #6B3DBE 100%)' }}
+      transition={{ duration: 0.5 }}
+      className="absolute inset-0 rounded-[36px] overflow-hidden"
+      style={{ background: slide.bg }}
     >
-      {/* Layered ambient glow */}
+      {/* Ambient glows */}
       <div className="absolute inset-0 pointer-events-none">
         <motion.div
-          animate={{ scale: [1, 1.12, 1], opacity: [0.6, 1, 0.6] }}
-          transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[60%] w-96 h-96 rounded-full"
-          style={{ background: 'radial-gradient(circle, rgba(228,176,8,0.14) 0%, rgba(108,61,186,0.18) 45%, transparent 72%)' }}
+          animate={{ scale: [1, 1.15, 1], opacity: [0.5, 0.9, 0.5] }}
+          transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[65%] w-80 h-80 rounded-full"
+          style={{ background: `radial-gradient(circle, ${slide.color}22 0%, rgba(108,61,186,0.15) 50%, transparent 75%)` }}
         />
-        <div className="absolute top-[5%] left-[2%] w-56 h-56 bg-[#B892FF]/10 rounded-full blur-3xl animate-float-slow" />
-        <div className="absolute top-[28%] right-[-8%] w-72 h-72 bg-[#5B2DA8]/20 rounded-full blur-3xl animate-float-slow" style={{ animationDelay: '2s' }} />
-        <div className="absolute bottom-[10%] left-[5%] w-52 h-52 bg-[#E4B008]/6 rounded-full blur-3xl animate-float-slow" style={{ animationDelay: '4s' }} />
+        <div className="absolute top-[4%] left-[-5%] w-52 h-52 bg-[#B892FF]/8 rounded-full blur-3xl" />
+        <div className="absolute bottom-[15%] right-[-5%] w-64 h-64 bg-[#4A2899]/20 rounded-full blur-3xl" />
       </div>
 
-      {/* Lotus watermark ghost */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ marginBottom: '60px' }}>
-        <img src={logoImg} alt="" aria-hidden className="w-[320px] h-[320px] object-contain opacity-[0.035]"
+      {/* Ghost logo watermark */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ paddingBottom: 80 }}>
+        <img src={logoImg} alt="" aria-hidden className="w-72 h-72 object-contain opacity-[0.03]"
           style={{ filter: 'brightness(0) invert(1)' }} />
       </div>
 
-      {/* Expanding pulse rings — synced with logo position */}
-      <div className="absolute flex items-center justify-center inset-0 pointer-events-none" style={{ paddingBottom: '140px' }}>
-        <div className="absolute w-52 h-52 rounded-full border border-[#E4B008]/10 animate-lotus-ring" />
-        <div className="absolute w-52 h-52 rounded-full border border-[#B892FF]/8 animate-lotus-ring" style={{ animationDelay: '1.4s' }} />
-        <div className="absolute w-52 h-52 rounded-full border border-white/5 animate-lotus-ring" style={{ animationDelay: '2.8s' }} />
+      {/* Logo + brand */}
+      <div className="absolute top-14 inset-x-0 flex flex-col items-center gap-1 z-10">
+        <motion.img
+          src={logoImg} alt="EndoSoul"
+          initial={{ scale: 0.7, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 1.0, ease: EASE_OUT }}
+          className="w-10 h-10 object-contain"
+          style={{ filter: 'drop-shadow(0 0 10px rgba(228,176,8,0.6))' }}
+        />
+        <span className="text-[#E4B008]/80 text-[10px] tracking-[0.3em] uppercase font-medium">EndoSoul</span>
       </div>
 
-      {/* Content */}
-      <div className="z-10 flex flex-col items-center">
-
-        {/* Logo — cinematic entrance */}
+      {/* Step content */}
+      <AnimatePresence mode="wait">
         <motion.div
-          initial={{ scale: 0.55, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 1.5, ease: EASE_OUT, delay: 0.15 }}
-          className="relative mb-8"
+          key={step}
+          initial={{ opacity: 0, x: 40 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -40 }}
+          transition={{ duration: 0.45, ease: EASE_OUT }}
+          className="absolute inset-0 flex flex-col items-center justify-center px-8 pb-24 z-10"
         >
-          {/* Breathing outer glow */}
+          {/* Large illustration */}
           <motion.div
-            animate={{ scale: [1, 1.15, 1], opacity: [0.3, 0.6, 0.3] }}
-            transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
-            className="absolute inset-0 rounded-full blur-3xl"
-            style={{ background: 'radial-gradient(circle, rgba(228,176,8,0.5) 0%, rgba(184,146,255,0.25) 50%, transparent 75%)', transform: 'scale(2.4)' }}
-          />
-          {/* Inner lavender ring */}
-          <motion.div
-            animate={{ scale: [1, 1.08, 1], opacity: [0.2, 0.45, 0.2] }}
-            transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-            className="absolute inset-0 rounded-full blur-2xl"
-            style={{ background: 'rgba(184,146,255,0.3)', transform: 'scale(1.7)' }}
-          />
-          <img
-            src={logoImg}
-            alt="EndoSoul"
-            className="relative w-44 h-44 object-contain"
-            style={{ filter: 'drop-shadow(0 0 28px rgba(228,176,8,0.8)) drop-shadow(0 0 55px rgba(184,146,255,0.4)) drop-shadow(0 0 90px rgba(108,61,186,0.3))' }}
-          />
+            initial={{ scale: 0.6, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.1, duration: 0.7, ease: EASE_OUT }}
+            className="w-32 h-32 rounded-full flex items-center justify-center mb-8"
+            style={{
+              background: 'rgba(255,255,255,0.08)',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(255,255,255,0.14)',
+              boxShadow: `0 0 60px ${slide.color}30, 0 20px 40px rgba(0,0,0,0.3)`,
+            }}
+          >
+            <span className="text-6xl">{slide.icon}</span>
+          </motion.div>
+
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+            className="text-[10px] tracking-[0.35em] uppercase mb-2"
+            style={{ color: `${slide.color}CC` }}
+          >
+            {slide.subtitle}
+          </motion.p>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.28, duration: 0.6, ease: EASE_OUT }}
+            className="text-3xl font-serif text-white text-center mb-4 leading-tight"
+          >
+            {slide.title}
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.38, duration: 0.6 }}
+            className="text-white/55 text-center text-sm leading-relaxed max-w-[270px]"
+          >
+            {slide.desc}
+          </motion.p>
         </motion.div>
+      </AnimatePresence>
 
-        {/* Brand name */}
-        <motion.h1 {...reveal(0.75)}
-          className="text-[2.6rem] font-serif tracking-wide mb-1 leading-none"
-          style={{ background: 'linear-gradient(135deg, #FAE88A 0%, #E4B008 45%, #C07A20 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
-        >
-          EndoSoul
-        </motion.h1>
+      {/* Bottom controls */}
+      <div className="absolute bottom-0 inset-x-0 pb-10 px-8 z-20 flex flex-col items-center gap-5">
+        {/* Progress dots */}
+        <div className="flex gap-2">
+          {slides.map((_, i) => (
+            <motion.div
+              key={i}
+              animate={{ width: i === step ? 24 : 8, opacity: i === step ? 1 : 0.35 }}
+              transition={SPRING}
+              className="h-2 rounded-full"
+              style={{ backgroundColor: i === step ? slide.color : 'rgba(255,255,255,0.4)' }}
+            />
+          ))}
+        </div>
 
-        <motion.p {...reveal(0.9)} className="text-white/30 text-[9px] mb-5 tracking-[0.42em] uppercase">
-          Lumière &amp; Inspiration
-        </motion.p>
-
-        {/* Divider */}
-        <motion.div
-          initial={{ scaleX: 0, opacity: 0 }}
-          animate={{ scaleX: 1, opacity: 1 }}
-          transition={{ delay: 1.05, duration: 0.7, ease: EASE_OUT }}
-          className="w-16 h-px mb-5"
-          style={{ background: 'linear-gradient(90deg, transparent, rgba(228,176,8,0.55), transparent)' }}
-        />
-
-        {/* Tagline */}
-        <motion.p {...reveal(1.1)} className="text-white/55 text-sm font-light leading-relaxed max-w-[190px] mb-1">
-          Prenez soin de votre corps<br />et de votre âme
-        </motion.p>
-        <motion.p {...reveal(1.2)} className="text-[#E4B008]/65 text-sm italic mb-10 font-serif">
-          Lumière sur ta guérison
-        </motion.p>
-
-        {/* CTA button */}
+        {/* CTA */}
         <motion.button
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.4, duration: 0.7, ease: EASE_OUT }}
-          whileHover={{ scale: 1.04, backgroundColor: 'rgba(255,255,255,0.18)' }}
-          whileTap={{ scale: 0.96 }}
-          data-testid="btn-commencer"
-          onClick={() => navigate('auth')}
-          className="relative overflow-hidden bg-white/10 backdrop-blur-xl border border-white/20 text-white px-12 py-4 rounded-full text-base font-medium"
-          style={{ boxShadow: '0 0 35px rgba(228,176,8,0.18), 0 4px 24px rgba(184,146,255,0.14), inset 0 1px 0 rgba(255,255,255,0.1)' }}
+          transition={{ delay: 0.5, duration: 0.6 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => {
+            if (step < slides.length - 1) setStep(s => s + 1);
+            else navigate('auth');
+          }}
+          data-testid={step === slides.length - 1 ? 'btn-commencer' : `btn-step-${step}`}
+          className="w-full py-4 rounded-full text-base font-semibold text-white relative overflow-hidden"
+          style={{
+            background: step === slides.length - 1
+              ? 'linear-gradient(135deg, #E4B008 0%, #C49B00 100%)'
+              : 'rgba(255,255,255,0.15)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255,255,255,0.2)',
+            boxShadow: step === slides.length - 1
+              ? '0 8px 32px rgba(228,176,8,0.4)'
+              : '0 4px 20px rgba(0,0,0,0.2)',
+          }}
         >
-          <span className="relative z-10">Commencer</span>
+          {step === slides.length - 1 ? "Commencer mon parcours ✦" : "Suivant"}
         </motion.button>
 
-        <motion.p {...reveal(1.6)} className="text-white/18 text-[1.4rem] mt-10 tracking-widest">
-          ॐ
-        </motion.p>
+        {step > 0 && (
+          <button onClick={() => setStep(s => s - 1)} className="text-white/40 text-sm">
+            Retour
+          </button>
+        )}
+        {step === 0 && (
+          <button onClick={() => navigate('auth')} className="text-white/30 text-sm">
+            Passer
+          </button>
+        )}
       </div>
     </motion.div>
   );
 };
 
+/* ─────────────────────────────────────────────────────────────────
+   AUTH
+───────────────────────────────────────────────────────────────── */
 export const Auth = ({ navigate }: { navigate: (s: ScreenId) => void }) => (
   <motion.div
     initial={{ opacity: 0 }}
@@ -172,7 +317,8 @@ export const Auth = ({ navigate }: { navigate: (s: ScreenId) => void }) => (
         transition={{ delay: 0.35, duration: 0.9, ease: EASE_OUT }}
         className="flex justify-center mb-4"
       >
-        <img src={logoImg} alt="EndoSoul" className="w-16 h-16 object-contain" style={{ filter: 'drop-shadow(0 0 10px rgba(228,176,8,0.4))' }} />
+        <img src={logoImg} alt="EndoSoul" className="w-16 h-16 object-contain"
+          style={{ filter: 'drop-shadow(0 0 10px rgba(228,176,8,0.4))' }} />
       </motion.div>
       <motion.h2
         initial={{ opacity: 0, y: 10 }}
@@ -182,14 +328,12 @@ export const Auth = ({ navigate }: { navigate: (s: ScreenId) => void }) => (
       >
         Bienvenue
       </motion.h2>
-      
+
       <div className="space-y-4 flex-1">
         <motion.button
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6, duration: 0.5, ease: EASE_OUT }}
-          whileHover={{ scale: 1.02, boxShadow: '0 4px 16px rgba(108,61,186,0.1)' }}
-          whileTap={{ scale: 0.97 }}
+          whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
           data-testid="btn-google"
           onClick={() => navigate('dashboard')}
           className="w-full flex items-center justify-center gap-3 bg-white border border-[#E9D8FF] text-[#2D1B69] py-4 rounded-2xl shadow-sm"
@@ -197,13 +341,11 @@ export const Auth = ({ navigate }: { navigate: (s: ScreenId) => void }) => (
           <FaGoogle className="text-[#DB4437]" size={20} />
           <span className="font-medium">Continuer avec Google</span>
         </motion.button>
-        
+
         <motion.button
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7, duration: 0.5, ease: EASE_OUT }}
-          whileHover={{ scale: 1.02, backgroundColor: '#111' }}
-          whileTap={{ scale: 0.97 }}
+          whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
           data-testid="btn-apple"
           onClick={() => navigate('dashboard')}
           className="w-full flex items-center justify-center gap-3 bg-[#1A1A2E] text-white py-4 rounded-2xl shadow-sm"
@@ -211,32 +353,39 @@ export const Auth = ({ navigate }: { navigate: (s: ScreenId) => void }) => (
           <FaApple size={22} />
           <span className="font-medium">Continuer avec Apple</span>
         </motion.button>
-        
-        <div className="flex items-center gap-4 py-4">
-          <div className="h-px bg-[#E9D8FF] flex-1"></div>
+
+        <div className="flex items-center gap-4 py-2">
+          <div className="h-px bg-[#E9D8FF] flex-1" />
           <span className="text-sm text-[#8B7BA8]">ou</span>
-          <div className="h-px bg-[#E9D8FF] flex-1"></div>
+          <div className="h-px bg-[#E9D8FF] flex-1" />
         </div>
-        
-        <button 
+
+        <motion.button
+          initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8, duration: 0.5, ease: EASE_OUT }}
+          whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
           data-testid="btn-email"
           onClick={() => navigate('dashboard')}
-          className="w-full bg-gradient-to-r from-[#B892FF] to-[#6C3DBA] text-white py-4 rounded-2xl font-medium shadow-sm transition-opacity hover:opacity-90"
+          className="w-full bg-gradient-to-r from-[#B892FF] to-[#6C3DBA] text-white py-4 rounded-2xl font-medium shadow-sm"
         >
-          S'inscrire avec email
-        </button>
+          {"S'inscrire avec email"}
+        </motion.button>
       </div>
-      
-      <p className="text-[10px] text-center text-[#8B7BA8] mt-8">
-        En continuant, vous acceptez nos Conditions d'utilisation et notre Politique de confidentialité (RGPD).
+
+      <p className="text-[10px] text-center text-[#8B7BA8] mt-6 leading-relaxed">
+        En continuant, vous acceptez nos Conditions d'utilisation et notre Politique de confidentialité conforme au RGPD.
       </p>
     </motion.div>
   </motion.div>
 );
 
+/* ─────────────────────────────────────────────────────────────────
+   DASHBOARD
+───────────────────────────────────────────────────────────────── */
 export const Dashboard = ({ navigate }: { navigate: (s: ScreenId) => void }) => {
   const [activeMood, setActiveMood] = useState('Sereine');
   const [reminderOn, setReminderOn] = useState(true);
+  const [hasNotif] = useState(true);
 
   const moods = [
     { label: 'Douleur', icon: '💜' },
@@ -248,38 +397,103 @@ export const Dashboard = ({ navigate }: { navigate: (s: ScreenId) => void }) => 
 
   return (
     <ScreenWrapper id="dashboard">
-      {/* Lotus watermark — top-right corner */}
-      <div className="absolute top-0 right-0 pointer-events-none opacity-[0.05] overflow-hidden">
+      {/* Lotus watermark */}
+      <div className="absolute top-0 right-0 pointer-events-none opacity-[0.04] overflow-hidden">
         <img src={logoImg} alt="" aria-hidden className="w-48 h-48 object-contain translate-x-10 -translate-y-10"
           style={{ filter: 'brightness(0) saturate(0)' }} />
       </div>
 
-      <header className="mb-6 flex items-start justify-between relative z-10">
+      {/* Header */}
+      <header className="mb-5 flex items-start justify-between relative z-10">
         <div>
-          <p className="text-[#8B7BA8] text-sm font-medium mb-0.5">Bonjour,</p>
+          <p className="text-[#8B7BA8] text-xs font-medium mb-0.5">Lundi 7 juillet 2025</p>
           <h1 className="text-2xl text-[#2D1B69] font-serif flex items-center gap-2">
-            Nour <span className="text-[#E4B008] text-lg">✦</span>
+            Bonjour, Nour <span className="text-[#E4B008]">👋</span>
           </h1>
         </div>
         <div className="flex items-center gap-2">
-          <img src={logoImg} alt="" className="w-7 h-7 object-contain opacity-60"
-            style={{ filter: 'drop-shadow(0 0 4px rgba(228,176,8,0.4))' }} />
-          <button className="w-9 h-9 glass-card rounded-full flex items-center justify-center text-[#8B7BA8]">
+          <motion.button
+            whileTap={{ scale: 0.88 }}
+            onClick={() => navigate('notifications')}
+            className="w-9 h-9 glass-card rounded-full flex items-center justify-center text-[#8B7BA8] relative"
+          >
             <Bell size={18} />
-          </button>
+            {hasNotif && (
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#E4B008] rounded-full" />
+            )}
+          </motion.button>
         </div>
       </header>
 
+      {/* Inspirational quote */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.05, duration: 0.5 }}
+        className="mb-5 px-4 py-3 rounded-2xl relative overflow-hidden"
+        style={{ background: 'linear-gradient(135deg, #EDE4FF 0%, #F5F0FF 100%)', border: '1px solid #E9D8FF' }}
+      >
+        <p className="text-[#6C3DBA] text-sm italic font-serif leading-relaxed">
+          "Tu es plus forte que tu ne le crois. Chaque jour est une victoire." ✦
+        </p>
+      </motion.div>
+
+      {/* Health ring + Phase */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1, duration: 0.55 }}
+        className="glass-card rounded-[28px] p-5 mb-5 flex items-center gap-5 border border-[#E9D8FF]/60"
+      >
+        <HealthRing score={72} />
+        <div className="flex-1">
+          <p className="text-[10px] text-[#8B7BA8] uppercase tracking-wider mb-1">Score bien-être</p>
+          <h3 className="text-xl font-serif text-[#2D1B69] mb-2">72 <span className="text-sm font-sans text-[#8B7BA8]">/ 100</span></h3>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium"
+            style={{ background: 'linear-gradient(135deg, #EDE4FF, #D8CCFF)', color: '#6C3DBA' }}>
+            <span>🌙</span> Phase folliculaire · Jour 8
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Quick stats row */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15, duration: 0.5 }}
+        className="flex gap-3 mb-5"
+      >
+        {[
+          { icon: '🔥', value: '23j', label: 'Série', color: '#FFF3E0', border: '#FFD080' },
+          { icon: '💊', value: '3.8', label: 'Douleur moy.', color: '#EDE4FF', border: '#B892FF' },
+          { icon: '🧘', value: '8', label: 'Sessions', color: '#E4F5E4', border: '#86C986' },
+        ].map((s, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.15 + i * 0.07, ...SPRING }}
+            className="flex-1 rounded-2xl p-3 flex flex-col items-center gap-1"
+            style={{ backgroundColor: s.color, border: `1px solid ${s.border}50` }}
+          >
+            <span className="text-lg">{s.icon}</span>
+            <span className="text-base font-bold text-[#2D1B69] font-serif">{s.value}</span>
+            <span className="text-[9px] text-[#8B7BA8] text-center leading-tight">{s.label}</span>
+          </motion.div>
+        ))}
+      </motion.div>
+
       {/* Mood pills */}
-      <div className="mb-6">
-        <p className="text-[#2D1B69] text-sm font-medium mb-3">Comment te sens-tu aujourd'hui ?</p>
-        <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+      <div className="mb-5">
+        <p className="text-[#2D1B69] text-sm font-semibold mb-3">Comment te sens-tu aujourd'hui ?</p>
+        <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 no-scrollbar">
           {moods.map(m => (
-            <button
+            <motion.button
               key={m.label}
               onClick={() => setActiveMood(m.label)}
               data-testid={`mood-${m.label}`}
-              className={`flex flex-col items-center gap-1.5 px-3 py-2.5 rounded-2xl text-xs font-medium whitespace-nowrap transition-all flex-shrink-0 ${
+              whileTap={{ scale: 0.93 }}
+              className={`flex flex-col items-center gap-1.5 px-3 py-2.5 rounded-2xl text-xs font-medium whitespace-nowrap flex-shrink-0 transition-all ${
                 activeMood === m.label
                   ? 'bg-[#6C3DBA] text-white shadow-[0_4px_16px_rgba(108,61,186,0.35)]'
                   : 'glass-card text-[#8B7BA8]'
@@ -287,19 +501,61 @@ export const Dashboard = ({ navigate }: { navigate: (s: ScreenId) => void }) => 
             >
               <span className="text-lg">{m.icon}</span>
               {m.label}
-            </button>
+            </motion.button>
           ))}
         </div>
       </div>
 
+      {/* 7-day mood chart */}
+      <motion.div
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.25, duration: 0.5 }}
+        className="glass-card rounded-[24px] p-4 mb-5 border border-[#E9D8FF]/60"
+      >
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <p className="text-sm font-semibold text-[#2D1B69]">Humeur · 7 derniers jours</p>
+            <p className="text-xs text-[#8B7BA8]">Moyenne : 5.7 / 10</p>
+          </div>
+          <button onClick={() => navigate('moodhistory')} className="text-[10px] text-[#6C3DBA] font-medium">
+            Voir tout →
+          </button>
+        </div>
+        <div className="flex justify-center">
+          <MoodChart />
+        </div>
+      </motion.div>
+
+      {/* Next appointment */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3, duration: 0.5 }}
+        onClick={() => navigate('practitioners')}
+        className="glass-card rounded-[24px] p-4 mb-5 flex items-center gap-4 cursor-pointer border border-[#E4B008]/20"
+        style={{ background: 'linear-gradient(135deg, #FFF8E4 0%, #FFFBF0 100%)' }}
+      >
+        <div className="w-12 h-12 rounded-2xl flex items-center justify-center"
+          style={{ background: 'linear-gradient(135deg, #E4B008, #F5C832)' }}>
+          <CalendarIcon size={22} className="text-white" />
+        </div>
+        <div className="flex-1">
+          <p className="text-xs text-[#C49B00] font-medium uppercase tracking-wide">Prochain RDV</p>
+          <p className="font-semibold text-[#2D1B69] text-sm">Dr. Claire Dubois</p>
+          <p className="text-xs text-[#8B7BA8]">Demain · 10h00 · Gynécologue</p>
+        </div>
+        <ChevronRight size={18} className="text-[#C49B00]" />
+      </motion.div>
+
       {/* Ton espace bien-être */}
-      <div className="mb-6">
+      <div className="mb-5">
         <h3 className="text-base font-semibold text-[#2D1B69] mb-3">Ton espace bien-être</h3>
         <div className="space-y-3">
           {[
             { icon: BookOpen, color: '#EDE4FF', iconColor: '#6C3DBA', title: 'Journal de bord', desc: 'Note tes symptômes, émotions et progrès', screen: 'symptoms' as ScreenId },
             { icon: Moon, color: '#F5F0FF', iconColor: '#B892FF', title: 'Méditations', desc: 'Apaise ton corps et ton esprit', screen: 'meditation' as ScreenId },
-            { icon: CalendarIcon, color: '#FFF8E4', iconColor: '#E4B008', title: 'Programme', desc: 'Ton parcours personnalisé', screen: 'cycle' as ScreenId },
+            { icon: CalendarIcon, color: '#FFF8E4', iconColor: '#E4B008', title: 'Mon Cycle', desc: 'Ton suivi personnalisé', screen: 'cycle' as ScreenId },
           ].map((item, idx) => {
             const Icon = item.icon;
             return (
@@ -307,21 +563,17 @@ export const Dashboard = ({ navigate }: { navigate: (s: ScreenId) => void }) => 
                 key={item.title}
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 + idx * 0.08, duration: 0.5, ease: EASE_OUT }}
-                whileHover={{ y: -3, scale: 1.015, boxShadow: '0 8px 28px rgba(108,61,186,0.14)' }}
+                transition={{ delay: 0.35 + idx * 0.08, duration: 0.5, ease: EASE_OUT }}
+                whileHover={{ y: -3, scale: 1.015 }}
                 whileTap={{ scale: 0.975 }}
                 onClick={() => navigate(item.screen)}
-                className="glass-card rounded-2xl p-4 flex items-center gap-4 cursor-pointer border border-[#E9D8FF]/60 transition-shadow"
+                className="glass-card rounded-2xl p-4 flex items-center gap-4 cursor-pointer border border-[#E9D8FF]/60"
                 data-testid={`card-${item.title}`}
               >
-                <motion.div
-                  whileHover={{ rotate: [0, -8, 8, 0] }}
-                  transition={{ duration: 0.4 }}
-                  className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: item.color }}
-                >
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ backgroundColor: item.color }}>
                   <Icon size={20} style={{ color: item.iconColor }} />
-                </motion.div>
+                </div>
                 <div className="flex-1 min-w-0">
                   <h4 className="font-medium text-[#2D1B69] text-sm">{item.title}</h4>
                   <p className="text-xs text-[#8B7BA8] truncate">{item.desc}</p>
@@ -333,175 +585,291 @@ export const Dashboard = ({ navigate }: { navigate: (s: ScreenId) => void }) => 
         </div>
       </div>
 
-      {/* Rappels & suivi */}
+      {/* Reminder + CTA */}
       <div>
-        <h3 className="text-base font-semibold text-[#2D1B69] mb-3">Rappels &amp; suivi</h3>
-        <div className="glass-card rounded-2xl p-4 flex items-center gap-3">
+        <h3 className="text-base font-semibold text-[#2D1B69] mb-3">Rappels & suivi</h3>
+        <div className="glass-card rounded-2xl p-4 flex items-center gap-3 mb-3">
           <div className="w-10 h-10 bg-[#EDE4FF] rounded-xl flex items-center justify-center flex-shrink-0">
             <Bell size={18} className="text-[#6C3DBA]" />
           </div>
           <div className="flex-1">
             <p className="font-medium text-[#2D1B69] text-sm">Prendre mon traitement</p>
-            <p className="text-xs text-[#8B7BA8]">Aujourd'hui à 20:00</p>
+            <p className="text-xs text-[#8B7BA8]">{"Aujourd'hui à 20:00"}</p>
           </div>
           <button
             onClick={() => setReminderOn(r => !r)}
             data-testid="toggle-reminder"
             className={`w-11 h-6 rounded-full transition-all relative flex-shrink-0 ${reminderOn ? 'bg-[#6C3DBA]' : 'bg-[#E9D8FF]'}`}
           >
-            <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${reminderOn ? 'left-5' : 'left-0.5'}`}></div>
+            <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${reminderOn ? 'left-5' : 'left-0.5'}`} />
           </button>
         </div>
 
-        <button 
+        <motion.button
+          whileTap={{ scale: 0.97 }}
           onClick={() => navigate('symptoms')}
-          className="w-full bg-gradient-to-r from-[#B892FF] to-[#6C3DBA] text-white py-3.5 rounded-2xl mt-3 flex justify-center items-center gap-2 shadow-premium"
+          className="w-full bg-gradient-to-r from-[#B892FF] to-[#6C3DBA] text-white py-3.5 rounded-2xl flex justify-center items-center gap-2 shadow-premium"
           data-testid="btn-nouveau-releve"
         >
           <Plus size={18} />
           <span className="font-medium text-sm">Nouveau relevé</span>
-        </button>
+        </motion.button>
       </div>
     </ScreenWrapper>
   );
 };
 
-export const Cycle = ({ navigate }: { navigate: (s: ScreenId) => void }) => (
-  <ScreenWrapper id="cycle">
-    <h1 className="text-2xl text-[#2D1B69] mb-6 font-serif">Mon Cycle</h1>
-    
-    <div className="glass-card rounded-[32px] p-6 mb-6">
-      <div className="flex justify-between items-center mb-6">
-        <h3 className="text-lg font-medium text-[#2D1B69]">Novembre 2023</h3>
-        <div className="flex gap-2">
-          <ChevronLeft className="text-[#8B7BA8]" />
-          <ChevronRight className="text-[#6C3DBA]" />
+/* ─────────────────────────────────────────────────────────────────
+   CYCLE
+───────────────────────────────────────────────────────────────── */
+export const Cycle = ({ navigate }: { navigate: (s: ScreenId) => void }) => {
+  const [selectedDay, setSelectedDay] = useState(8);
+
+  const days = Array.from({ length: 30 }, (_, i) => i + 1);
+
+  const getDayStyle = (day: number) => {
+    if (day >= 1 && day <= 5) return { bg: 'bg-[#B892FF]', text: 'text-white', label: 'Règles' };
+    if (day >= 6 && day <= 13) return { bg: 'bg-[#EDE4FF]', text: 'text-[#6C3DBA]', label: 'Folliculaire' };
+    if (day >= 14 && day <= 16) return { bg: 'bg-[#E4B008]', text: 'text-white', label: 'Ovulation' };
+    if (day >= 17 && day <= 28) return { bg: 'bg-[#F0E8FF]', text: 'text-[#8B7BA8]', label: 'Lutéale' };
+    return { bg: '', text: 'text-[#2D1B69]', label: '' };
+  };
+
+  return (
+    <ScreenWrapper id="cycle">
+      <h1 className="text-2xl text-[#2D1B69] mb-5 font-serif">Mon Cycle</h1>
+
+      {/* Calendar */}
+      <div className="glass-card rounded-[32px] p-5 mb-5">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-base font-semibold text-[#2D1B69]">Juillet 2025</h3>
+          <div className="flex gap-2">
+            <motion.button whileTap={{ scale: 0.88 }} className="w-8 h-8 glass-card rounded-full flex items-center justify-center text-[#8B7BA8]">
+              <ChevronLeft size={16} />
+            </motion.button>
+            <motion.button whileTap={{ scale: 0.88 }} className="w-8 h-8 glass-card rounded-full flex items-center justify-center text-[#6C3DBA]">
+              <ChevronRight size={16} />
+            </motion.button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-7 gap-y-2 text-center mb-2">
+          {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d, i) => (
+            <div key={i} className="text-[10px] text-[#8B7BA8] font-semibold py-1">{d}</div>
+          ))}
+          {days.map(day => {
+            const { bg, text } = getDayStyle(day);
+            const isSelected = day === selectedDay;
+            const isToday = day === 7;
+            return (
+              <div key={day} className="flex justify-center">
+                <motion.button
+                  whileTap={{ scale: 0.85 }}
+                  onClick={() => setSelectedDay(day)}
+                  className={`w-8 h-8 flex items-center justify-center rounded-full text-xs font-medium transition-all ${bg} ${text} ${isSelected ? 'ring-2 ring-[#E4B008] ring-offset-1 ring-offset-white' : ''} ${isToday ? 'ring-2 ring-[#6C3DBA]/40' : ''}`}
+                >
+                  {day}
+                </motion.button>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="flex gap-3 mt-4 pt-4 border-t border-[#E9D8FF] text-[10px] flex-wrap">
+          {[
+            { color: '#B892FF', label: 'Règles' },
+            { color: '#EDE4FF', label: 'Folliculaire', textColor: '#6C3DBA' },
+            { color: '#E4B008', label: 'Ovulation' },
+            { color: '#F0E8FF', label: 'Lutéale', textColor: '#8B7BA8' },
+          ].map(item => (
+            <div key={item.label} className="flex items-center gap-1 text-[#2D1B69]">
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
+              {item.label}
+            </div>
+          ))}
         </div>
       </div>
-      
-      <div className="grid grid-cols-7 gap-y-4 text-center mb-2">
-        {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d, idx) => (
-          <div key={idx} className="text-xs text-[#8B7BA8] font-medium">{d}</div>
+
+      {/* Phase info */}
+      <div className="flex gap-3 mb-5">
+        <div className="flex-1 rounded-2xl p-4 border"
+          style={{ background: 'linear-gradient(135deg, #EDE4FF 0%, #FAF7FF 100%)', borderColor: '#E9D8FF' }}>
+          <span className="text-[10px] text-[#6C3DBA] uppercase font-bold tracking-wider">Phase actuelle</span>
+          <h4 className="text-lg text-[#2D1B69] mt-1 font-serif">Folliculaire</h4>
+          <p className="text-xs text-[#8B7BA8] mt-0.5">Jour 8 · Cycle de 28 jours</p>
+        </div>
+        <div className="flex-1 rounded-2xl p-4 border"
+          style={{ background: 'linear-gradient(135deg, #FFF8E4 0%, #FFFBF0 100%)', borderColor: '#F0DCA0' }}>
+          <span className="text-[10px] text-[#C49B00] uppercase font-bold tracking-wider">Prochaine</span>
+          <h4 className="text-lg text-[#2D1B69] mt-1 font-serif">Ovulation</h4>
+          <p className="text-xs text-[#8B7BA8] mt-0.5">Dans 6 jours</p>
+        </div>
+      </div>
+
+      {/* Weekly pain chart */}
+      <div className="glass-card rounded-[24px] p-4 mb-5 border border-[#E9D8FF]/60">
+        <p className="text-sm font-semibold text-[#2D1B69] mb-3">Douleur · Dernière semaine</p>
+        <svg width="100%" height={50} viewBox={`0 0 ${210} 50`} preserveAspectRatio="xMidYMid meet">
+          {[6, 4, 5, 7, 3, 4, 3].map((v, i) => {
+            const x = i * 30 + 15;
+            const h = (v / 10) * 40;
+            const y = 42 - h;
+            return (
+              <g key={i}>
+                <motion.rect x={x - 9} y={y} width={18} height={h} rx={5}
+                  fill={v >= 6 ? '#B892FF' : '#E9D8FF'}
+                  initial={{ scaleY: 0 }} animate={{ scaleY: 1 }}
+                  transition={{ delay: i * 0.07 + 0.2, duration: 0.5, ease: EASE_OUT }}
+                  style={{ transformOrigin: `${x}px 42px` }}
+                />
+                <text x={x} y={50} textAnchor="middle" fontSize={8} fill="#8B7BA8">
+                  {['L', 'M', 'M', 'J', 'V', 'S', 'D'][i]}
+                </text>
+              </g>
+            );
+          })}
+        </svg>
+        <div className="flex justify-between mt-1">
+          <span className="text-[10px] text-[#8B7BA8]">Moy. douleur : 4.6 / 10</span>
+          <span className="text-[10px] text-[#6C3DBA] font-medium">↓ -1.2 vs semaine préc.</span>
+        </div>
+      </div>
+
+      {/* Phase symptoms */}
+      <h3 className="text-base font-semibold text-[#2D1B69] mb-3">Symptômes fréquents</h3>
+      <div className="flex flex-wrap gap-2">
+        {['Crampes pelviennes', 'Fatigue intense', 'Ballonnements', 'Maux de tête', 'Humeur instable', 'Dos lombaire'].map(sym => (
+          <motion.span key={sym} whileTap={{ scale: 0.95 }}
+            className="px-4 py-2 glass-card rounded-full text-sm text-[#2D1B69] cursor-pointer border border-[#E9D8FF]/60">
+            {sym}
+          </motion.span>
         ))}
-        {Array.from({length: 30}).map((_, i) => {
-          const day = i + 1;
-          let bg = "";
-          let text = "text-[#2D1B69]";
-          let ring = "";
-          if (day >= 12 && day <= 16) { bg = "bg-[#B892FF]"; text = "text-white"; } // Period
-          else if (day >= 22 && day <= 26) { bg = "bg-[#E9D8FF]"; text = "text-[#6C3DBA]"; } // Fertile
-          
-          if (day === 14) {
-             ring = "ring-2 ring-[#E4B008] ring-offset-2 ring-offset-[#FAF7FF]";
-          }
-          
-          return (
-            <div key={i} className="flex justify-center">
-              <div className={`w-8 h-8 flex items-center justify-center rounded-full ${bg} ${text} ${ring}`}>
-                {day}
+      </div>
+
+      {/* Phases CYCLE_PHASES */}
+      <h3 className="text-base font-semibold text-[#2D1B69] mt-6 mb-3">Les 4 phases du cycle</h3>
+      <div className="space-y-2">
+        {CYCLE_PHASES.map((phase, i) => (
+          <motion.div key={i} initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: i * 0.07, duration: 0.4 }}
+            className="glass-card rounded-2xl p-3 flex items-center gap-3 border border-[#E9D8FF]/50">
+            <div className="w-3 h-10 rounded-full" style={{ backgroundColor: phase.color }} />
+            <div className="flex-1">
+              <div className="flex items-center justify-between">
+                <span className="font-medium text-[#2D1B69] text-sm">{phase.name}</span>
+                <span className="text-[10px] text-[#8B7BA8]">Jours {phase.days}</span>
               </div>
+              <span className="text-xs text-[#8B7BA8]">{phase.desc}</span>
             </div>
-          );
-        })}
+          </motion.div>
+        ))}
       </div>
-      
-      <div className="flex gap-4 mt-6 pt-4 border-t border-[#E9D8FF] text-xs">
-        <div className="flex items-center gap-1 text-[#2D1B69]"><div className="w-2 h-2 rounded-full bg-[#B892FF]"></div> Règles</div>
-        <div className="flex items-center gap-1 text-[#2D1B69]"><div className="w-2 h-2 rounded-full bg-[#E9D8FF]"></div> Fertilité</div>
-      </div>
-    </div>
+    </ScreenWrapper>
+  );
+};
 
-    <div className="flex gap-4 mb-6">
-      <div className="flex-1 bg-gradient-to-r from-[#E9D8FF] to-[#FAF7FF] p-4 rounded-2xl border border-[#E9D8FF]">
-        <span className="text-xs text-[#6C3DBA] uppercase font-bold tracking-wider">Phase Actuelle</span>
-        <h4 className="text-xl text-[#2D1B69] mt-1 font-serif">Menstruelle</h4>
-        <p className="text-sm text-[#8B7BA8] mt-1">Jour 3 sur 28</p>
-      </div>
-    </div>
-
-    <h3 className="text-xl text-[#2D1B69] mb-4 font-serif">Symptômes fréquents</h3>
-    <div className="flex flex-wrap gap-2">
-      {['Crampes pelviennes', 'Fatigue intense', 'Ballonnements', 'Maux de tête'].map(sym => (
-        <span key={sym} className="px-4 py-2 glass-card rounded-full text-sm text-[#2D1B69]">
-          {sym}
-        </span>
-      ))}
-    </div>
-  </ScreenWrapper>
-);
-
+/* ─────────────────────────────────────────────────────────────────
+   SYMPTOMS
+───────────────────────────────────────────────────────────────── */
 export const Symptoms = ({ navigate }: { navigate: (s: ScreenId) => void }) => {
   const [submitted, setSubmitted] = useState(false);
-  
+  const [activeMoodIdx, setActiveMoodIdx] = useState(2);
+
   const handleSubmit = () => {
     setSubmitted(true);
-    setTimeout(() => {
-      setSubmitted(false);
-      navigate('dashboard');
-    }, 2000);
+    setTimeout(() => { setSubmitted(false); navigate('dashboard'); }, 2000);
   };
 
   return (
     <ScreenWrapper id="symptoms">
       <div className="flex items-center gap-4 mb-8">
-        <button onClick={() => navigate('dashboard')} className="p-2 glass-card rounded-full text-[#6C3DBA]">
+        <motion.button whileTap={{ scale: 0.9 }} onClick={() => navigate('dashboard')}
+          className="p-2 glass-card rounded-full text-[#6C3DBA]">
           <ChevronLeft size={24} />
-        </button>
+        </motion.button>
         <h1 className="text-2xl text-[#2D1B69] font-serif">Comment vas-tu ?</h1>
       </div>
 
-      <div className="space-y-8 glass-card p-6 rounded-[32px] border border-[#E9D8FF]">
-        
+      <div className="space-y-7 glass-card p-6 rounded-[32px] border border-[#E9D8FF]">
         <div>
-          <label className="block text-lg font-medium text-[#2D1B69] mb-4">Niveau de douleur</label>
+          <label className="block text-base font-semibold text-[#2D1B69] mb-4">Niveau de douleur</label>
           <input type="range" min="0" max="10" defaultValue="4" className="custom-slider mb-2" />
           <div className="flex justify-between text-sm text-[#8B7BA8] font-medium">
-            <span>Aucune</span>
-            <span>Insoutenable</span>
+            <span>Aucune</span><span>Insoutenable</span>
           </div>
         </div>
 
         <div>
-          <label className="block text-lg font-medium text-[#2D1B69] mb-4">Humeur</label>
+          <label className="block text-base font-semibold text-[#2D1B69] mb-4">Humeur</label>
           <div className="flex justify-between glass-card p-2 rounded-2xl">
             {['😊', '😐', '😔', '😢', '😤'].map((emoji, i) => (
-              <button key={emoji} className={`text-3xl p-2 rounded-xl transition-all ${i === 2 ? 'bg-[#E9D8FF] scale-110' : 'hover:bg-white/50'}`}>
+              <motion.button key={emoji} whileTap={{ scale: 0.88 }}
+                onClick={() => setActiveMoodIdx(i)}
+                className={`text-3xl p-2 rounded-xl transition-all ${i === activeMoodIdx ? 'bg-[#E9D8FF] scale-110' : 'hover:bg-white/50'}`}>
                 {emoji}
-              </button>
+              </motion.button>
             ))}
           </div>
         </div>
 
         <div>
-          <label className="block text-lg font-medium text-[#2D1B69] mb-4">Fatigue</label>
+          <label className="block text-base font-semibold text-[#2D1B69] mb-4">Fatigue</label>
           <input type="range" min="0" max="10" defaultValue="6" className="custom-slider mb-2" />
           <div className="flex justify-between text-sm text-[#8B7BA8] font-medium">
-            <span>En forme</span>
-            <span>Épuisée</span>
+            <span>En forme</span><span>Épuisée</span>
           </div>
         </div>
 
-        <button 
+        <div>
+          <label className="block text-base font-semibold text-[#2D1B69] mb-3">Symptômes du jour</label>
+          <div className="flex flex-wrap gap-2">
+            {['Crampes', 'Ballonnements', 'Fatigue', 'Dos', 'Nausées', 'Migraines'].map(s => (
+              <motion.button key={s} whileTap={{ scale: 0.93 }}
+                className="px-3 py-1.5 glass-card rounded-full text-sm text-[#6C3DBA] border border-[#E9D8FF]">
+                + {s}
+              </motion.button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-base font-semibold text-[#2D1B69] mb-3">Note libre</label>
+          <textarea
+            placeholder="Décris ta journée en quelques mots…"
+            className="w-full bg-[#FAF7FF] border border-[#E9D8FF] rounded-2xl p-3 text-sm text-[#2D1B69] placeholder:text-[#C4B5D4] resize-none focus:outline-none focus:border-[#B892FF]"
+            rows={3}
+          />
+        </div>
+
+        <motion.button
+          whileTap={{ scale: 0.97 }}
           onClick={handleSubmit}
-          className="w-full bg-gradient-to-r from-[#B892FF] to-[#6C3DBA] border border-[#E4B008] text-white py-4 rounded-2xl text-lg font-medium shadow-premium relative overflow-hidden"
+          className="w-full bg-gradient-to-r from-[#B892FF] to-[#6C3DBA] border border-[#E4B008]/30 text-white py-4 rounded-2xl text-base font-semibold shadow-premium relative overflow-hidden"
         >
           {submitted ? 'Enregistré ✨' : 'Enregistrer'}
-        </button>
+        </motion.button>
       </div>
 
-      {submitted && (
-        <div className="fixed top-12 left-6 right-6 glass-card border border-[#E9D8FF] text-[#6C3DBA] p-4 rounded-xl shadow-premium flex items-center justify-center gap-2 z-50">
-          <Check size={20} className="text-[#E4B008]" />
-          <span className="font-medium">Tes symptômes ont été notés. Repose-toi bien. 💜</span>
-        </div>
-      )}
+      <AnimatePresence>
+        {submitted && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
+            className="fixed top-12 left-6 right-6 glass-card border border-[#E9D8FF] text-[#6C3DBA] p-4 rounded-xl shadow-premium flex items-center justify-center gap-2 z-50"
+          >
+            <Check size={20} className="text-[#E4B008]" />
+            <span className="font-medium text-sm">Tes symptômes ont été notés. Repose-toi bien. 💜</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </ScreenWrapper>
   );
 };
 
+/* ─────────────────────────────────────────────────────────────────
+   MEDITATION
+───────────────────────────────────────────────────────────────── */
 export const Meditation = ({ navigate }: { navigate: (s: ScreenId) => void }) => (
   <ScreenWrapper id="meditation">
-    {/* Lotus watermark — bottom center */}
     <div className="absolute bottom-20 left-1/2 -translate-x-1/2 pointer-events-none opacity-[0.04]">
       <img src={logoImg} alt="" aria-hidden className="w-56 h-56 object-contain"
         style={{ filter: 'hue-rotate(260deg) saturate(0.3) brightness(0.4)' }} />
@@ -512,14 +880,33 @@ export const Meditation = ({ navigate }: { navigate: (s: ScreenId) => void }) =>
         style={{ filter: 'drop-shadow(0 0 6px rgba(228,176,8,0.5))' }} />
       <h1 className="text-2xl text-[#2D1B69] font-serif">Méditation & Reiki</h1>
     </div>
-    <p className="text-[#8B7BA8] mb-8 relative z-10">Un moment de douceur pour toi.</p>
+    <p className="text-[#8B7BA8] text-sm mb-6 relative z-10">Un moment de douceur pour toi.</p>
+
+    {/* Stats banner */}
+    <motion.div
+      initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.1, duration: 0.4 }}
+      className="flex gap-3 mb-6 relative z-10"
+    >
+      {[
+        { icon: '🧘', value: '8', label: 'Sessions ce mois' },
+        { icon: '⏱', value: '96min', label: 'Temps total' },
+        { icon: '🔥', value: '3j', label: 'Série actuelle' },
+      ].map((s, i) => (
+        <div key={i} className="flex-1 glass-card rounded-2xl p-3 text-center border border-[#E9D8FF]/50">
+          <div className="text-lg mb-0.5">{s.icon}</div>
+          <div className="text-sm font-bold text-[#6C3DBA] font-serif">{s.value}</div>
+          <div className="text-[9px] text-[#8B7BA8]">{s.label}</div>
+        </div>
+      ))}
+    </motion.div>
 
     <div className="grid gap-4 relative z-10">
       {[
-        { title: 'Respiration lunaire', icon: Moon, duration: '5 min', desc: 'Apaiser le système nerveux' },
-        { title: 'Ancrage', icon: Anchor, duration: '12 min', desc: 'Se reconnecter à son corps' },
-        { title: 'Lâcher-prise', icon: Feather, duration: '15 min', desc: 'Soulager les tensions pelviennes' },
-        { title: 'Sommeil réparateur', icon: Star, duration: '20 min', desc: 'Préparer une nuit paisible' }
+        { title: 'Respiration lunaire', icon: Moon, duration: '5 min', desc: 'Apaiser le système nerveux', tag: 'Populaire', locked: false },
+        { title: 'Ancrage', icon: Anchor, duration: '12 min', desc: 'Se reconnecter à son corps', tag: '', locked: false },
+        { title: 'Lâcher-prise', icon: Feather, duration: '15 min', desc: 'Soulager les tensions pelviennes', tag: 'Premium', locked: true },
+        { title: 'Sommeil réparateur', icon: Star, duration: '20 min', desc: 'Préparer une nuit paisible', tag: 'Premium', locked: true },
       ].map((session, i) => {
         const Icon = session.icon;
         return (
@@ -528,11 +915,18 @@ export const Meditation = ({ navigate }: { navigate: (s: ScreenId) => void }) =>
             initial={{ opacity: 0, x: -16 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: i * 0.09, duration: 0.5, ease: EASE_OUT }}
-            whileHover={{ y: -3, scale: 1.015, boxShadow: '0 10px 30px rgba(108,61,186,0.12)' }}
+            whileHover={{ y: -3, scale: 1.015 }}
             whileTap={{ scale: 0.975 }}
-            onClick={() => i === 0 && navigate('serenity')}
-            className="glass-card p-5 rounded-[28px] flex items-center gap-5 cursor-pointer border border-[#E9D8FF]/50"
+            onClick={() => { if (!session.locked && i === 0) navigate('serenity'); else if (session.locked) navigate('premium'); }}
+            className="glass-card p-5 rounded-[28px] flex items-center gap-4 cursor-pointer border border-[#E9D8FF]/50 relative overflow-hidden"
           >
+            {session.locked && (
+              <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] flex items-center justify-end pr-5 z-10">
+                <div className="flex items-center gap-1.5 bg-[#E4B008] text-white px-3 py-1.5 rounded-full text-xs font-semibold">
+                  ✦ Premium
+                </div>
+              </div>
+            )}
             <motion.div
               animate={{ scale: [1, 1.06, 1] }}
               transition={{ duration: 3 + i * 0.5, repeat: Infinity, ease: 'easeInOut', delay: i * 0.6 }}
@@ -541,19 +935,27 @@ export const Meditation = ({ navigate }: { navigate: (s: ScreenId) => void }) =>
               <Icon size={24} />
             </motion.div>
             <div className="flex-1">
-              <h3 className="font-medium text-lg text-[#2D1B69] mb-1">{session.title}</h3>
-              <p className="text-xs text-[#8B7BA8]">{session.desc}</p>
+              <div className="flex items-center gap-2">
+                <h3 className="font-semibold text-base text-[#2D1B69]">{session.title}</h3>
+                {session.tag && !session.locked && (
+                  <span className="text-[9px] bg-[#EDE4FF] text-[#6C3DBA] px-2 py-0.5 rounded-full font-medium">{session.tag}</span>
+                )}
+              </div>
+              <p className="text-xs text-[#8B7BA8] mt-0.5">{session.desc}</p>
             </div>
-            <div className="bg-[#FAF7FF] border border-[#E9D8FF] text-[#6C3DBA] px-3 py-1 rounded-full text-xs font-medium">
+            <div className="bg-[#FAF7FF] border border-[#E9D8FF] text-[#6C3DBA] px-3 py-1 rounded-full text-xs font-medium shrink-0">
               {session.duration}
             </div>
           </motion.div>
-        )
+        );
       })}
     </div>
   </ScreenWrapper>
 );
 
+/* ─────────────────────────────────────────────────────────────────
+   SERENITY (unchanged — already premium)
+───────────────────────────────────────────────────────────────── */
 export const Serenity = ({ navigate }: { navigate: (s: ScreenId) => void }) => {
   const { isPlaying, toggle } = useAmbientAudio();
   const [breathPhase, setBreathPhase] = useState<'Inspirez...' | 'Expirez...'>('Inspirez...');
@@ -563,12 +965,8 @@ export const Serenity = ({ navigate }: { navigate: (s: ScreenId) => void }) => {
 
   useEffect(() => {
     if (isPlaying) {
-      timerRef.current = setInterval(() => {
-        setSecondsLeft(s => Math.max(0, s - 1));
-      }, 1000);
-      breathRef.current = setInterval(() => {
-        setBreathPhase(p => p === 'Inspirez...' ? 'Expirez...' : 'Inspirez...');
-      }, 4500);
+      timerRef.current = setInterval(() => { setSecondsLeft(s => Math.max(0, s - 1)); }, 1000);
+      breathRef.current = setInterval(() => { setBreathPhase(p => p === 'Inspirez...' ? 'Expirez...' : 'Inspirez...'); }, 4500);
     } else {
       if (timerRef.current) clearInterval(timerRef.current);
       if (breathRef.current) clearInterval(breathRef.current);
@@ -585,14 +983,11 @@ export const Serenity = ({ navigate }: { navigate: (s: ScreenId) => void }) => {
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0, scale: 0.97 }}
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, scale: 0.97 }}
       transition={{ duration: 0.6, ease: EASE_OUT }}
       className="absolute inset-0 flex flex-col items-center justify-between p-6 pb-10 rounded-[36px]"
       style={{ background: 'linear-gradient(170deg, #0D0130 0%, #2D1B69 45%, #4A2899 75%, #7C4DCC 100%)' }}
     >
-      {/* Ambient glow */}
       <motion.div
         animate={{ scale: [1, 1.18, 1], opacity: [0.3, 0.6, 0.3] }}
         transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
@@ -600,14 +995,10 @@ export const Serenity = ({ navigate }: { navigate: (s: ScreenId) => void }) => {
         style={{ background: 'radial-gradient(circle, rgba(228,176,8,0.12) 0%, rgba(184,146,255,0.18) 50%, transparent 75%)' }}
       />
 
-      {/* Header */}
       <div className="w-full flex items-center justify-between pt-8 relative z-10">
-        <motion.button
-          whileTap={{ scale: 0.85 }}
-          onClick={() => navigate('meditation')}
+        <motion.button whileTap={{ scale: 0.85 }} onClick={() => navigate('meditation')}
           className="w-10 h-10 rounded-full flex items-center justify-center"
-          style={{ background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.18)' }}
-        >
+          style={{ background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.18)' }}>
           <ChevronLeft size={22} className="text-white" />
         </motion.button>
 
@@ -623,119 +1014,78 @@ export const Serenity = ({ navigate }: { navigate: (s: ScreenId) => void }) => {
         </div>
       </div>
 
-      {/* Breathing orb */}
       <div className="flex flex-col items-center gap-8 relative z-10">
         <div className="relative w-64 h-64 flex items-center justify-center">
-          {/* SVG progress ring */}
           <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 256 256">
             <circle cx="128" cy="128" r="120" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="2" />
-            <motion.circle
-              cx="128" cy="128" r="120"
-              fill="none"
-              stroke="rgba(228,176,8,0.7)"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeDasharray={`${2 * Math.PI * 120}`}
+            <motion.circle cx="128" cy="128" r="120" fill="none" stroke="rgba(228,176,8,0.7)" strokeWidth="2"
+              strokeLinecap="round" strokeDasharray={`${2 * Math.PI * 120}`}
               animate={{ strokeDashoffset: 2 * Math.PI * 120 * (1 - progress) }}
-              transition={{ duration: 1, ease: 'linear' }}
-            />
+              transition={{ duration: 1, ease: 'linear' }} />
           </svg>
 
-          {/* Breathing rings */}
-          <motion.div
-            animate={isPlaying ? { scale: [1, 1.18, 1], opacity: [0.2, 0.08, 0.2] } : { scale: 1 }}
+          <motion.div animate={isPlaying ? { scale: [1, 1.18, 1], opacity: [0.2, 0.08, 0.2] } : { scale: 1 }}
             transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
-            className="absolute inset-4 rounded-full border border-white/20"
-          />
-          <motion.div
-            animate={isPlaying ? { scale: [1, 1.12, 1], opacity: [0.3, 0.12, 0.3] } : { scale: 1 }}
+            className="absolute inset-4 rounded-full border border-white/20" />
+          <motion.div animate={isPlaying ? { scale: [1, 1.12, 1], opacity: [0.3, 0.12, 0.3] } : { scale: 1 }}
             transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-            className="absolute inset-10 rounded-full border border-[#B892FF]/35"
-          />
+            className="absolute inset-10 rounded-full border border-[#B892FF]/35" />
 
-          {/* Center glow + logo */}
           <motion.div
-            animate={isPlaying
-              ? { scale: [1, 1.15, 1], boxShadow: ['0 0 30px rgba(228,176,8,0.25)', '0 0 60px rgba(228,176,8,0.5)', '0 0 30px rgba(228,176,8,0.25)'] }
-              : { scale: 1 }
-            }
+            animate={isPlaying ? { scale: [1, 1.15, 1], boxShadow: ['0 0 30px rgba(228,176,8,0.25)', '0 0 60px rgba(228,176,8,0.5)', '0 0 30px rgba(228,176,8,0.25)'] } : { scale: 1 }}
             transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
             className="absolute inset-16 rounded-full flex items-center justify-center"
-            style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.12)' }}
-          >
+            style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.12)' }}>
             <img src={logoImg} alt="" className="w-16 h-16 object-contain"
               style={{ filter: 'drop-shadow(0 0 12px rgba(228,176,8,0.6)) brightness(1.1)' }} />
           </motion.div>
 
-          {/* Breath phase text */}
           <div className="absolute bottom-6 w-full text-center">
             <AnimatePresence mode="wait">
-              <motion.p
-                key={isPlaying ? breathPhase : 'idle'}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
+              <motion.p key={isPlaying ? breathPhase : 'idle'}
+                initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.6 }}
-                className="text-white/80 text-sm font-serif tracking-widest"
-              >
+                className="text-white/80 text-sm font-serif tracking-widest">
                 {isPlaying ? breathPhase : 'Prête ?'}
               </motion.p>
             </AnimatePresence>
           </div>
         </div>
 
-        {/* Timer */}
-        <motion.div
-          animate={isPlaying ? { opacity: [0.7, 1, 0.7] } : {}}
+        <motion.div animate={isPlaying ? { opacity: [0.7, 1, 0.7] } : {}}
           transition={{ duration: 2, repeat: Infinity }}
-          className="text-white font-serif text-5xl font-light tracking-widest"
-        >
+          className="text-white font-serif text-5xl font-light tracking-widest">
           {mins}:{secs}
         </motion.div>
       </div>
 
-      {/* Controls */}
       <div className="flex items-center gap-8 relative z-10">
-        <motion.button
-          whileTap={{ scale: 0.85 }}
-          onClick={() => setSecondsLeft(300)}
+        <motion.button whileTap={{ scale: 0.85 }} onClick={() => setSecondsLeft(300)}
           className="w-12 h-12 rounded-full flex items-center justify-center text-white/70"
-          style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)' }}
-        >
+          style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)' }}>
           <Activity size={20} />
         </motion.button>
 
-        <motion.button
-          whileTap={{ scale: 0.88 }}
-          onClick={toggle}
+        <motion.button whileTap={{ scale: 0.88 }} onClick={toggle}
           className="w-20 h-20 rounded-full text-white flex items-center justify-center relative"
           style={{
-            background: isPlaying
-              ? 'linear-gradient(135deg, #E4B008 0%, #C49B00 100%)'
-              : 'linear-gradient(135deg, #7C4DCC 0%, #4A2899 100%)',
-            boxShadow: isPlaying
-              ? '0 0 40px rgba(228,176,8,0.5), 0 8px 24px rgba(228,176,8,0.3)'
-              : '0 0 40px rgba(184,146,255,0.4), 0 8px 24px rgba(108,61,186,0.3)',
-          }}
-        >
+            background: isPlaying ? 'linear-gradient(135deg, #E4B008 0%, #C49B00 100%)' : 'linear-gradient(135deg, #7C4DCC 0%, #4A2899 100%)',
+            boxShadow: isPlaying ? '0 0 40px rgba(228,176,8,0.5), 0 8px 24px rgba(228,176,8,0.3)' : '0 0 40px rgba(184,146,255,0.4), 0 8px 24px rgba(108,61,186,0.3)',
+          }}>
           <AnimatePresence mode="wait">
             {isPlaying
               ? <motion.div key="pause" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}><Pause size={30} /></motion.div>
-              : <motion.div key="play"  initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}><Play  size={30} className="ml-1" /></motion.div>
-            }
+              : <motion.div key="play" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}><Play size={30} className="ml-1" /></motion.div>}
           </AnimatePresence>
         </motion.button>
 
-        <motion.button
-          whileTap={{ scale: 0.85 }}
+        <motion.button whileTap={{ scale: 0.85 }}
           className="w-12 h-12 rounded-full flex items-center justify-center"
-          style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)' }}
-        >
+          style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)' }}>
           <MusicIcon className={isPlaying ? 'text-[#E4B008]' : 'text-white/70'} />
         </motion.button>
       </div>
 
-      {/* Audio label */}
       <p className="text-white/30 text-[11px] tracking-widest uppercase relative z-10">
         {isPlaying ? '♫ Musique zen · Ambient 432Hz' : 'Appuie pour commencer'}
       </p>
@@ -743,123 +1093,145 @@ export const Serenity = ({ navigate }: { navigate: (s: ScreenId) => void }) => {
   );
 };
 
-const MusicIcon = ({ className }: { className?: string }) => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
-);
+/* ─────────────────────────────────────────────────────────────────
+   COMMUNITY
+───────────────────────────────────────────────────────────────── */
+export const Community = ({ navigate }: { navigate: (s: ScreenId) => void }) => {
+  const [activeTag, setActiveTag] = useState('Tous');
+  const [showWrite, setShowWrite] = useState(false);
+  const [likedPosts, setLikedPosts] = useState<Set<number>>(new Set());
+  const [savedPosts, setSavedPosts] = useState<Set<number>>(new Set([3]));
+  const [newPost, setNewPost] = useState('');
 
-export const Community = ({ navigate }: { navigate: (s: ScreenId) => void }) => (
-  <ScreenWrapper id="community">
-    <h1 className="text-2xl text-[#2D1B69] mb-6 font-serif">Espace Communauté</h1>
-    
-    <div className="flex gap-2 overflow-x-auto pb-4 mb-2">
-      {['#Témoignage', '#Soutien', '#Victoires', '#Questions'].map((tag, i) => (
-        <span key={tag} className={`px-4 py-2 glass-card rounded-full text-sm font-medium whitespace-nowrap ${i === 0 ? 'bg-[#B892FF] text-white border-transparent' : 'text-[#6C3DBA]'}`}>
-          {tag}
-        </span>
-      ))}
-    </div>
+  const tags = ['Tous', '#Témoignage', '#Soutien', '#Victoires', '#Conseils'];
 
-    <div className="space-y-4">
-      {[
-        { initials: 'M', bg: 'bg-gradient-to-br from-[#EDE4FF] to-[#D4B8FF] text-[#6C3DBA]', user: 'Anonyme', time: 'Il y a 2h', text: "Aujourd'hui, j'ai enfin trouvé une gynécologue qui m'écoute vraiment. Ne perdez pas espoir les filles ! 💜", likes: 24, replies: 5 },
-        { initials: 'L', bg: 'bg-gradient-to-br from-[#FFE4E4] to-[#FFC4C4] text-[#E46B6B]', user: 'Anonyme', time: 'Il y a 5h', text: "Grosse crise de douleur ce matin... vos astuces naturelles pour faire passer ça quand la bouillotte ne suffit plus ?", likes: 12, replies: 8 },
-        { initials: 'A', bg: 'bg-gradient-to-br from-[#E4EDFF] to-[#C4D8FF] text-[#6B96E4]', user: 'Anonyme', time: 'Hier', text: "Premier jour post-opératoire (coelioscopie). C'est dur mais je me sens soulagée de savoir qu'on m'a enfin diagnostiquée officiellement.", likes: 156, replies: 32 }
-      ].map((post, i) => (
-        <div key={i} className="glass-card p-5 rounded-[24px]">
-          <div className="flex items-center gap-3 mb-3">
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${post.bg}`}>
-              {post.initials}
-            </div>
-            <div>
-              <div className="font-medium text-[#2D1B69]">{post.user}</div>
-              <div className="text-xs text-[#8B7BA8]">{post.time}</div>
-            </div>
-          </div>
-          <p className="text-[#2D1B69]/90 text-sm leading-relaxed mb-4">{post.text}</p>
-          <div className="flex gap-6 border-t border-[#E9D8FF] pt-3">
-            <button className="flex items-center gap-1.5 text-[#8B7BA8] text-sm hover:text-[#6C3DBA]">
-              <ThumbsUp size={16} /> {post.likes}
-            </button>
-            <button className="flex items-center gap-1.5 text-[#8B7BA8] text-sm hover:text-[#6C3DBA]">
-              <MessageCircle size={16} /> {post.replies}
-            </button>
-          </div>
-        </div>
-      ))}
-    </div>
-
-    <button className="fixed bottom-28 right-6 w-14 h-14 bg-gradient-to-br from-[#B892FF] to-[#6C3DBA] text-white rounded-full shadow-premium flex items-center justify-center z-50">
-      <MessageCircle size={24} />
-    </button>
-  </ScreenWrapper>
-);
-
-export const Practitioners = ({ navigate }: { navigate: (s: ScreenId) => void }) => {
-  const [selected, setSelected] = useState(false);
+  const toggleLike = (id: number) => setLikedPosts(s => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
+  const toggleSave = (id: number) => setSavedPosts(s => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
 
   return (
-    <ScreenWrapper id="practitioners">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl text-[#2D1B69] font-serif">Praticiens</h1>
-        <button onClick={() => navigate('premium')} className="bg-[#FAF7FF] text-[#E4B008] p-2 rounded-full border border-[#E4B008]/20">
-          <Star size={20} />
-        </button>
+    <ScreenWrapper id="community">
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-2xl text-[#2D1B69] font-serif">Communauté</h1>
+        <div className="flex items-center gap-1.5 bg-[#EDE4FF] text-[#6C3DBA] px-3 py-1.5 rounded-full text-xs font-semibold">
+          <TrendingUp size={12} /> Tendances
+        </div>
       </div>
 
-      <div className="glass-card p-3 rounded-2xl flex items-center gap-3 mb-6 text-[#8B7BA8]">
-        <MapPin size={20} />
-        <span className="text-sm">Autour de Paris, 75000</span>
-      </div>
-
-      <div className="space-y-4">
-        {[
-          { name: 'Dr. Claire Dubois', spec: 'Gynécologue experte', dist: '2.4 km', rating: '4.9', bg: 'bg-gradient-to-tr from-[#E9D8FF] to-[#B892FF]/30' },
-          { name: 'Nadia Lefort', spec: 'Ostéopathe pelvienne', dist: '3.1 km', rating: '4.8', bg: 'bg-gradient-to-tr from-[#FFF8E4] to-[#E4B008]/30' },
-          { name: 'Marie Leroy', spec: 'Naturopathe', dist: '5.0 km', rating: '5.0', bg: 'bg-gradient-to-tr from-[#E4EDFF] to-[#B892FF]/20' },
-        ].map((doc, i) => (
-          <div key={i} onClick={() => setSelected(true)} className="glass-card p-4 rounded-[24px] flex gap-4 cursor-pointer hover:border-[#B892FF]/30">
-            <div className={`w-16 h-16 rounded-xl ${doc.bg} shrink-0`}></div>
-            <div className="flex-1">
-              <h3 className="font-medium text-[#2D1B69]">{doc.name}</h3>
-              <p className="text-sm text-[#6C3DBA] mb-2">{doc.spec}</p>
-              <div className="flex items-center gap-3 text-xs text-[#8B7BA8]">
-                <span className="flex items-center gap-1 text-[#E4B008] font-medium"><Star size={12} fill="currentColor" /> {doc.rating}</span>
-                <span className="flex items-center gap-1"><MapPin size={12} /> {doc.dist}</span>
+      {/* Stories */}
+      <div className="flex gap-3 overflow-x-auto pb-3 mb-4 -mx-1 px-1 no-scrollbar">
+        {STORIES.map((s, i) => (
+          <motion.div key={i} whileTap={{ scale: 0.92 }}
+            className="flex flex-col items-center gap-1.5 flex-shrink-0 cursor-pointer">
+            <div className="w-14 h-14 rounded-full p-0.5"
+              style={{ background: s.isOwn ? 'linear-gradient(135deg, #B892FF, #E4B008)' : 'linear-gradient(135deg, #E9D8FF, #B892FF)' }}>
+              <div className="w-full h-full rounded-full flex items-center justify-center text-sm font-bold border-2 border-[#FAF7FF]"
+                style={{ background: s.bg, color: s.color }}>
+                {s.isOwn ? <Plus size={16} className="text-white" /> : s.initials}
               </div>
             </div>
-          </div>
+            <span className="text-[9px] text-[#8B7BA8]">{s.isOwn ? 'Ma story' : `Anonyme`}</span>
+          </motion.div>
         ))}
       </div>
 
-      <AnimatePresence>
-        {selected && (
-          <motion.div 
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-[#2D1B69]/40 backdrop-blur-sm flex items-end justify-center rounded-[44px] overflow-hidden"
-            onClick={() => setSelected(false)}
-          >
-            <motion.div 
-              initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
-              className="bg-white w-full rounded-t-[40px] p-6 pb-12 relative shadow-[0_-20px_60px_rgba(108,61,186,0.15)]"
-              onClick={e => e.stopPropagation()}
-            >
-              <div className="w-12 h-1.5 bg-[#E9D8FF] rounded-full mx-auto mb-6"></div>
-              <div className="flex gap-4 mb-6">
-                 <div className={`w-24 h-24 rounded-2xl bg-gradient-to-tr from-[#E9D8FF] to-[#B892FF]/30 shrink-0`}></div>
-                 <div>
-                   <h2 className="text-2xl text-[#6C3DBA] font-medium font-serif">Dr. Claire Dubois</h2>
-                   <p className="text-[#8B7BA8] mb-2">Gynécologue experte</p>
-                   <span className="inline-flex items-center gap-1 bg-[#FAF7FF] text-[#E4B008] px-2 py-1 rounded-lg border border-[#E4B008]/20 text-sm font-medium">
-                     <Star size={14} fill="currentColor" /> 4.9 (120 avis)
-                   </span>
-                 </div>
+      {/* Filter chips */}
+      <div className="flex gap-2 overflow-x-auto pb-3 mb-4 -mx-1 px-1 no-scrollbar">
+        {tags.map(tag => (
+          <motion.button key={tag} whileTap={{ scale: 0.93 }}
+            onClick={() => setActiveTag(tag)}
+            className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${activeTag === tag ? 'bg-[#6C3DBA] text-white shadow-[0_4px_14px_rgba(108,61,186,0.3)]' : 'glass-card text-[#6C3DBA] border border-[#E9D8FF]'}`}>
+            {tag}
+          </motion.button>
+        ))}
+      </div>
+
+      {/* Posts */}
+      <div className="space-y-4">
+        {COMMUNITY_POSTS.map((post, i) => (
+          <motion.div key={post.id}
+            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.08, duration: 0.45, ease: EASE_OUT }}
+            className="glass-card p-5 rounded-[24px] border border-[#E9D8FF]/50">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0"
+                style={{ background: post.bg, color: post.color }}>
+                {post.initials}
               </div>
-              <p className="text-sm text-[#2D1B69]/80 leading-relaxed mb-8">
-                Spécialisée dans la prise en charge des douleurs pelviennes chroniques et le diagnostic de l'endométriose. Approche bienveillante et pluridisciplinaire.
-              </p>
-              <button className="w-full bg-[#E4B008] text-white py-4 rounded-xl font-medium shadow-[0_8px_24px_rgba(228,176,8,0.3)] text-lg">
-                Prendre rendez-vous
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-[#2D1B69] text-sm">{post.user}</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full font-medium"
+                    style={{ backgroundColor: post.tagBg, color: post.tagColor }}>
+                    {post.tag}
+                  </span>
+                </div>
+                <div className="text-[10px] text-[#8B7BA8]">{post.time}</div>
+              </div>
+              <motion.button whileTap={{ scale: 0.85 }} onClick={() => toggleSave(post.id)}>
+                <Bookmark size={16} className={savedPosts.has(post.id) ? 'text-[#E4B008] fill-[#E4B008]' : 'text-[#C4B5D4]'} />
+              </motion.button>
+            </div>
+            <p className="text-[#2D1B69]/85 text-sm leading-relaxed mb-4">{post.text}</p>
+            <div className="flex items-center gap-5 border-t border-[#E9D8FF] pt-3">
+              <motion.button whileTap={{ scale: 0.85 }} onClick={() => toggleLike(post.id)}
+                className="flex items-center gap-1.5 text-sm transition-colors">
+                <Heart size={16} className={likedPosts.has(post.id) ? 'text-[#E46B6B] fill-[#E46B6B]' : 'text-[#C4B5D4]'} />
+                <span className={likedPosts.has(post.id) ? 'text-[#E46B6B]' : 'text-[#8B7BA8]'}>
+                  {post.hearts + (likedPosts.has(post.id) ? 1 : 0)}
+                </span>
+              </motion.button>
+              <button className="flex items-center gap-1.5 text-[#8B7BA8] text-sm hover:text-[#6C3DBA]">
+                <MessageCircle size={16} /> {post.replies}
               </button>
+              <button className="flex items-center gap-1.5 text-[#8B7BA8] text-sm hover:text-[#6C3DBA] ml-auto">
+                <TrendingUp size={14} /> Partager
+              </button>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* FAB */}
+      <motion.button
+        whileTap={{ scale: 0.9 }} whileHover={{ scale: 1.08 }}
+        onClick={() => setShowWrite(true)}
+        className="fixed bottom-28 right-6 w-14 h-14 rounded-full text-white flex items-center justify-center z-40 shadow-premium"
+        style={{ background: 'linear-gradient(135deg, #B892FF 0%, #6C3DBA 100%)' }}
+      >
+        <Plus size={24} />
+      </motion.button>
+
+      {/* Write post modal */}
+      <AnimatePresence>
+        {showWrite && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-[#2D1B69]/40 backdrop-blur-sm flex items-end rounded-[44px] overflow-hidden"
+            onClick={() => setShowWrite(false)}>
+            <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+              transition={SPRING}
+              className="bg-white w-full rounded-t-[36px] p-6 pb-10 shadow-premium"
+              onClick={e => e.stopPropagation()}>
+              <div className="w-10 h-1 bg-[#E9D8FF] rounded-full mx-auto mb-5" />
+              <h3 className="text-lg font-serif text-[#2D1B69] mb-4">Partager avec la communauté</h3>
+              <textarea
+                value={newPost} onChange={e => setNewPost(e.target.value)}
+                placeholder="Ton témoignage, une question, une victoire…"
+                className="w-full bg-[#FAF7FF] border border-[#E9D8FF] rounded-2xl p-4 text-sm text-[#2D1B69] placeholder:text-[#C4B5D4] resize-none focus:outline-none focus:border-[#B892FF] mb-4"
+                rows={4}
+                autoFocus
+              />
+              <div className="flex gap-2 mb-4 flex-wrap">
+                {['#Témoignage', '#Soutien', '#Victoires', '#Question'].map(tag => (
+                  <button key={tag} className="px-3 py-1.5 bg-[#EDE4FF] text-[#6C3DBA] rounded-full text-xs font-medium">
+                    {tag}
+                  </button>
+                ))}
+              </div>
+              <motion.button whileTap={{ scale: 0.97 }}
+                onClick={() => setShowWrite(false)}
+                className="w-full bg-gradient-to-r from-[#B892FF] to-[#6C3DBA] text-white py-4 rounded-2xl font-semibold flex items-center justify-center gap-2">
+                <Send size={18} /> Publier
+              </motion.button>
             </motion.div>
           </motion.div>
         )}
@@ -868,135 +1240,449 @@ export const Practitioners = ({ navigate }: { navigate: (s: ScreenId) => void })
   );
 };
 
-export const Premium = ({ navigate }: { navigate: (s: ScreenId) => void }) => (
-  <ScreenWrapper id="premium" className="bg-gradient-to-br from-[#2D1B69] via-[#4A2899] to-[#B892FF]">
-    <button onClick={() => navigate('profile')} className="absolute top-14 left-6 p-2 glass-card bg-white/20 text-white rounded-full z-10">
-      <ChevronLeft size={24} />
-    </button>
-    
-    <div className="text-center mt-12 mb-8 relative z-10">
-      <div className="inline-block p-4 rounded-3xl glass-card bg-white/15 mb-6">
-        <img src={logoImg} alt="EndoSoul" className="w-12 h-12 object-contain" style={{ filter: 'drop-shadow(0 0 12px rgba(228,176,8,0.5))' }} />
-      </div>
-      <h1 className="text-3xl text-white mb-2 font-serif">EndoSoul <span className="text-[#E4B008]">Premium</span></h1>
-      <p className="text-white/80">Accédez à votre plein potentiel de guérison</p>
-    </div>
+/* ─────────────────────────────────────────────────────────────────
+   PRACTITIONERS + BOOKING
+───────────────────────────────────────────────────────────────── */
+export const Practitioners = ({ navigate }: { navigate: (s: ScreenId) => void }) => {
+  const [selectedDoc, setSelectedDoc] = useState<number | null>(null);
+  const [selectedDate, setSelectedDate] = useState(0);
+  const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
+  const [confirmed, setConfirmed] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeFilter, setActiveFilter] = useState('Tous');
 
-    <div className="glass-card bg-white/10 rounded-[32px] p-6 mb-8 text-white z-10 relative">
-      <ul className="space-y-4 mb-8">
-        {[
-          'Programmes de méditation illimités',
-          'Suivi de cycle avancé et prédictions',
-          'Rendez-vous prioritaires praticiens',
-          'Accès aux groupes de parole privés'
-        ].map((feat, i) => (
-          <li key={i} className="flex items-center gap-3">
-            <div className="bg-[#E4B008] rounded-full p-1 text-white">
-              <Check size={14} strokeWidth={3} />
-            </div>
-            <span className="text-sm font-medium">{feat}</span>
-          </li>
+  const filters = ['Tous', 'Gynéco', 'Ostéo', 'Psy', 'Naturo'];
+
+  const handleConfirm = () => {
+    setConfirmed(true);
+    setTimeout(() => { setConfirmed(false); setSelectedDoc(null); setSelectedSlot(null); }, 2500);
+  };
+
+  const doc = selectedDoc !== null ? PRACTITIONERS[selectedDoc] : null;
+
+  return (
+    <ScreenWrapper id="practitioners">
+      <div className="flex items-center justify-between mb-5">
+        <h1 className="text-2xl text-[#2D1B69] font-serif">Praticiens</h1>
+        <button onClick={() => navigate('premium')}
+          className="flex items-center gap-1.5 bg-[#FFF8E4] text-[#E4B008] px-3 py-1.5 rounded-full border border-[#E4B008]/25 text-xs font-semibold">
+          <Star size={12} fill="currentColor" /> Premium
+        </button>
+      </div>
+
+      {/* Search */}
+      <div className="glass-card p-3 rounded-2xl flex items-center gap-3 mb-4 text-[#8B7BA8] border border-[#E9D8FF]/60">
+        <Search size={18} />
+        <input
+          value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+          placeholder="Rechercher un praticien…"
+          className="flex-1 bg-transparent text-sm text-[#2D1B69] placeholder:text-[#C4B5D4] focus:outline-none"
+        />
+        <div className="flex items-center gap-1 text-[#6C3DBA] text-xs">
+          <MapPin size={14} /> Paris
+        </div>
+      </div>
+
+      {/* Filter chips */}
+      <div className="flex gap-2 overflow-x-auto pb-2 mb-4 no-scrollbar">
+        {filters.map(f => (
+          <motion.button key={f} whileTap={{ scale: 0.93 }}
+            onClick={() => setActiveFilter(f)}
+            className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap ${activeFilter === f ? 'bg-[#6C3DBA] text-white' : 'glass-card text-[#6C3DBA] border border-[#E9D8FF]'}`}>
+            {f}
+          </motion.button>
         ))}
-      </ul>
-
-      <div className="text-center mb-6">
-        <div className="text-4xl text-[#E4B008] font-serif mb-1">9,99€<span className="text-lg text-white/70 font-sans">/mois</span></div>
-        <p className="text-xs text-white/60">Sans engagement, annulable à tout moment.</p>
       </div>
 
-      <button className="w-full bg-[#E4B008] text-white py-4 rounded-full font-medium shadow-[0_8px_24px_rgba(228,176,8,0.4)] text-lg transition-transform active:scale-95">
-        Essai gratuit 7 jours
-      </button>
-    </div>
-  </ScreenWrapper>
-);
+      {/* Practitioner cards */}
+      <div className="space-y-3">
+        {PRACTITIONERS.map((p, i) => (
+          <motion.div key={p.id}
+            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.07, duration: 0.45, ease: EASE_OUT }}
+            whileHover={{ y: -2, boxShadow: '0 8px 28px rgba(108,61,186,0.12)' }}
+            whileTap={{ scale: 0.985 }}
+            onClick={() => { setSelectedDoc(i); setSelectedSlot(null); setConfirmed(false); }}
+            className="glass-card p-4 rounded-[24px] flex gap-4 cursor-pointer border border-[#E9D8FF]/50">
+            {/* Avatar */}
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-lg font-bold shrink-0"
+              style={{ background: p.bg }}>
+              <span style={{ color: '#2D1B69' }}>{p.initials}</span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <h3 className="font-semibold text-[#2D1B69] text-sm">{p.name}</h3>
+                  <p className="text-xs text-[#6C3DBA] mb-1.5">{p.spec}</p>
+                </div>
+                <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${p.available ? 'bg-emerald-400' : 'bg-gray-300'}`} />
+              </div>
+              <div className="flex items-center gap-3 text-xs text-[#8B7BA8] mb-2">
+                <span className="flex items-center gap-1 text-[#E4B008] font-semibold">
+                  <Star size={11} fill="currentColor" /> {p.rating}
+                  <span className="text-[#8B7BA8] font-normal">({p.reviews})</span>
+                </span>
+                <span className="flex items-center gap-1"><MapPin size={11} /> {p.dist}</span>
+                <span className="font-medium text-[#6C3DBA]">{p.price}</span>
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {p.tags.slice(0, 2).map(tag => (
+                  <span key={tag} className="text-[9px] bg-[#EDE4FF] text-[#6C3DBA] px-2 py-0.5 rounded-full">{tag}</span>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
 
+      {/* Booking bottom sheet */}
+      <AnimatePresence>
+        {selectedDoc !== null && doc && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-[#2D1B69]/40 backdrop-blur-sm flex items-end rounded-[44px] overflow-hidden"
+            onClick={() => setSelectedDoc(null)}>
+            <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+              transition={SPRING}
+              className="bg-white w-full rounded-t-[40px] p-6 pb-12 shadow-premium max-h-[85%] overflow-y-auto"
+              onClick={e => e.stopPropagation()}>
+              <div className="w-10 h-1 bg-[#E9D8FF] rounded-full mx-auto mb-5" />
+
+              {/* Confirmed state */}
+              <AnimatePresence>
+                {confirmed && (
+                  <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="absolute inset-0 bg-white rounded-t-[40px] flex flex-col items-center justify-center gap-4 z-10">
+                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.1, ...SPRING }}
+                      className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center text-4xl">
+                      ✅
+                    </motion.div>
+                    <h3 className="text-xl font-serif text-[#2D1B69]">Rendez-vous confirmé !</h3>
+                    <p className="text-[#8B7BA8] text-sm text-center">
+                      {doc.name} · {BOOKING_DATES[selectedDate].full} · {selectedSlot}
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Doctor header */}
+              <div className="flex gap-4 mb-5">
+                <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-xl font-bold shrink-0"
+                  style={{ background: doc.bg }}>
+                  <span style={{ color: '#2D1B69' }}>{doc.initials}</span>
+                </div>
+                <div>
+                  <h2 className="text-xl text-[#6C3DBA] font-semibold font-serif">{doc.name}</h2>
+                  <p className="text-[#8B7BA8] text-sm mb-1.5">{doc.spec}</p>
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1 bg-[#FFF8E4] text-[#E4B008] px-2 py-1 rounded-lg border border-[#E4B008]/20 text-xs font-semibold">
+                      <Star size={11} fill="currentColor" /> {doc.rating} ({doc.reviews} avis)
+                    </span>
+                    <span className="text-xs text-[#6C3DBA] font-semibold">{doc.price}</span>
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-sm text-[#2D1B69]/75 leading-relaxed mb-5">{doc.bio}</p>
+
+              {/* Date selection */}
+              <p className="text-sm font-semibold text-[#2D1B69] mb-3">Choisir une date</p>
+              <div className="flex gap-2 overflow-x-auto pb-2 mb-5 no-scrollbar">
+                {BOOKING_DATES.map((d, i) => (
+                  <motion.button key={i} whileTap={{ scale: 0.9 }}
+                    onClick={() => { setSelectedDate(i); setSelectedSlot(null); }}
+                    className={`flex flex-col items-center px-4 py-3 rounded-2xl shrink-0 border transition-all ${selectedDate === i ? 'bg-[#6C3DBA] border-[#6C3DBA] text-white' : 'bg-[#FAF7FF] border-[#E9D8FF] text-[#2D1B69]'}`}>
+                    <span className="text-[10px] font-medium opacity-70">{d.label}</span>
+                    <span className="text-lg font-bold font-serif">{d.date}</span>
+                  </motion.button>
+                ))}
+              </div>
+
+              {/* Time slots */}
+              <p className="text-sm font-semibold text-[#2D1B69] mb-3">Créneaux disponibles</p>
+              <div className="grid grid-cols-3 gap-2 mb-6">
+                {doc.slots.map(slot => (
+                  <motion.button key={slot} whileTap={{ scale: 0.92 }}
+                    onClick={() => setSelectedSlot(slot)}
+                    className={`py-2.5 rounded-xl text-sm font-semibold border transition-all ${selectedSlot === slot ? 'bg-[#6C3DBA] border-[#6C3DBA] text-white shadow-[0_4px_14px_rgba(108,61,186,0.3)]' : 'bg-[#FAF7FF] border-[#E9D8FF] text-[#2D1B69]'}`}>
+                    {slot}
+                  </motion.button>
+                ))}
+              </div>
+
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={selectedSlot ? handleConfirm : undefined}
+                className={`w-full py-4 rounded-2xl font-semibold text-base transition-all ${selectedSlot ? 'bg-[#E4B008] text-white shadow-[0_8px_24px_rgba(228,176,8,0.35)]' : 'bg-[#F0E8FF] text-[#B892FF] cursor-not-allowed'}`}>
+                {selectedSlot ? `Confirmer · ${BOOKING_DATES[selectedDate].full} à ${selectedSlot}` : 'Sélectionner un créneau'}
+              </motion.button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </ScreenWrapper>
+  );
+};
+
+/* ─────────────────────────────────────────────────────────────────
+   PREMIUM — Luxury redesign
+───────────────────────────────────────────────────────────────── */
+export const Premium = ({ navigate }: { navigate: (s: ScreenId) => void }) => {
+  const [billing, setBilling] = useState<'month' | 'year'>('year');
+
+  const features = [
+    { icon: '🧘', title: 'Méditations illimitées', desc: '50+ programmes guidés' },
+    { icon: '📊', title: 'Suivi avancé', desc: 'Prédictions & rapports IA' },
+    { icon: '🩺', title: 'Praticiens prioritaires', desc: 'Accès direct & sans attente' },
+    { icon: '👥', title: 'Groupes privés', desc: 'Cercles de parole exclusifs' },
+    { icon: '📄', title: 'Rapports mensuels PDF', desc: 'Export complet de santé' },
+    { icon: '🚫', title: 'Sans publicité', desc: 'Expérience 100% pure' },
+  ];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, scale: 0.97 }}
+      transition={{ duration: 0.5 }}
+      className="absolute inset-0 overflow-y-auto pb-10 rounded-[36px]"
+      style={{ background: 'linear-gradient(170deg, #08001E 0%, #1A0545 25%, #2D1B69 55%, #4A2899 80%, #6C3DBA 100%)' }}
+    >
+      {/* Ambient glows */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-72 h-72 rounded-full blur-[80px]"
+          style={{ background: 'radial-gradient(circle, rgba(228,176,8,0.18) 0%, transparent 70%)' }} />
+        <div className="absolute bottom-1/4 right-0 w-60 h-60 rounded-full blur-[60px]"
+          style={{ background: 'rgba(184,146,255,0.12)' }} />
+      </div>
+
+      {/* Close */}
+      <motion.button whileTap={{ scale: 0.88 }} onClick={() => navigate('profile')}
+        className="absolute top-16 left-6 z-10 w-10 h-10 rounded-full flex items-center justify-center"
+        style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.18)' }}>
+        <X size={20} className="text-white" />
+      </motion.button>
+
+      {/* Header */}
+      <div className="flex flex-col items-center pt-20 pb-6 px-6 relative z-10">
+        <motion.div initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.9, ease: EASE_OUT }}
+          className="relative mb-5">
+          <motion.div animate={{ scale: [1, 1.2, 1], opacity: [0.4, 0.7, 0.4] }}
+            transition={{ duration: 3.5, repeat: Infinity }}
+            className="absolute inset-0 rounded-full blur-2xl"
+            style={{ background: 'rgba(228,176,8,0.4)', transform: 'scale(2)' }} />
+          <div className="w-20 h-20 rounded-3xl flex items-center justify-center relative"
+            style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', backdropFilter: 'blur(20px)' }}>
+            <img src={logoImg} alt="EndoSoul" className="w-12 h-12 object-contain"
+              style={{ filter: 'drop-shadow(0 0 16px rgba(228,176,8,0.8))' }} />
+          </div>
+        </motion.div>
+
+        <h1 className="text-3xl font-serif text-white mb-1">
+          EndoSoul <span style={{ background: 'linear-gradient(135deg, #FAE88A, #E4B008)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Premium</span>
+        </h1>
+        <p className="text-white/55 text-sm text-center max-w-[240px]">
+          {"Accède à ton plein potentiel de guérison"}
+        </p>
+      </div>
+
+      {/* Billing toggle */}
+      <div className="flex justify-center mb-6 px-6 relative z-10">
+        <div className="flex rounded-full p-1" style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)' }}>
+          <motion.button whileTap={{ scale: 0.95 }} onClick={() => setBilling('month')}
+            className={`px-5 py-2 rounded-full text-sm font-semibold transition-all ${billing === 'month' ? 'bg-white text-[#2D1B69]' : 'text-white/60'}`}>
+            Mensuel
+          </motion.button>
+          <motion.button whileTap={{ scale: 0.95 }} onClick={() => setBilling('year')}
+            className={`px-5 py-2 rounded-full text-sm font-semibold transition-all flex items-center gap-1.5 ${billing === 'year' ? 'bg-white text-[#2D1B69]' : 'text-white/60'}`}>
+            Annuel
+            {billing === 'year' && <span className="text-[9px] bg-[#E4B008] text-white px-1.5 py-0.5 rounded-full">-35%</span>}
+          </motion.button>
+        </div>
+      </div>
+
+      {/* Pricing card */}
+      <div className="mx-6 mb-6 relative z-10">
+        <div className="rounded-[32px] p-6" style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.18)', backdropFilter: 'blur(20px)' }}>
+          <div className="text-center mb-6">
+            <div className="text-5xl font-serif text-white mb-1">
+              <span style={{ background: 'linear-gradient(135deg, #FAE88A, #E4B008)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                {billing === 'year' ? '6,49€' : '9,99€'}
+              </span>
+              <span className="text-lg text-white/50 font-sans">/mois</span>
+            </div>
+            {billing === 'year' && (
+              <p className="text-white/50 text-xs">
+                Facturé 77,88€/an · <span className="text-[#E4B008]">Économisez 42€</span>
+              </p>
+            )}
+          </div>
+
+          <ul className="space-y-3.5 mb-7">
+            {features.map((f, i) => (
+              <motion.li key={i} initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 + i * 0.06 }}
+                className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center text-base shrink-0"
+                  style={{ background: 'rgba(228,176,8,0.2)', border: '1px solid rgba(228,176,8,0.3)' }}>
+                  {f.icon}
+                </div>
+                <div>
+                  <div className="text-white text-sm font-medium">{f.title}</div>
+                  <div className="text-white/45 text-xs">{f.desc}</div>
+                </div>
+                <Check size={16} className="text-[#E4B008] ml-auto shrink-0" strokeWidth={2.5} />
+              </motion.li>
+            ))}
+          </ul>
+
+          <motion.button whileTap={{ scale: 0.97 }}
+            className="w-full py-4 rounded-full text-white font-bold text-base relative overflow-hidden"
+            style={{ background: 'linear-gradient(135deg, #E4B008 0%, #C49B00 100%)', boxShadow: '0 8px 32px rgba(228,176,8,0.45)' }}>
+            Essai gratuit · 7 jours
+          </motion.button>
+
+          <p className="text-center text-white/30 text-[10px] mt-3">
+            Sans engagement · Annulable à tout moment
+          </p>
+        </div>
+      </div>
+
+      {/* Trust badges */}
+      <div className="flex justify-center gap-5 px-6 pb-4 relative z-10">
+        {[{ icon: '🔒', label: 'RGPD' }, { icon: '🚫', label: 'Sans pub' }, { icon: '🔐', label: 'Chiffré' }].map((b, i) => (
+          <div key={i} className="flex flex-col items-center gap-1">
+            <span className="text-xl">{b.icon}</span>
+            <span className="text-[9px] text-white/40">{b.label}</span>
+          </div>
+        ))}
+      </div>
+    </motion.div>
+  );
+};
+
+/* ─────────────────────────────────────────────────────────────────
+   PROFILE
+───────────────────────────────────────────────────────────────── */
 export const Profile = ({ navigate }: { navigate: (s: ScreenId) => void }) => {
   const [reminders, setReminders] = useState(true);
 
+  const menuSections = [
+    {
+      title: 'Mon parcours',
+      items: [
+        { icon: Award, label: 'Mes succès', sub: '6 débloqués', onClick: () => navigate('achievements'), accent: '#E4B008' },
+        { icon: TrendingUp, label: "Historique humeur", sub: '7 jours', onClick: () => navigate('moodhistory'), accent: '#B892FF' },
+        { icon: FileText, label: 'Rapport mensuel', sub: 'Juillet 2025', onClick: () => navigate('report'), accent: '#6C3DBA' },
+      ]
+    },
+    {
+      title: 'Compte',
+      items: [
+        { icon: Star, label: 'Gérer mon abonnement', sub: 'Premium actif', onClick: () => navigate('premium'), accent: '#E4B008' },
+        { icon: Bell, label: 'Notifications', sub: '3 non lues', onClick: () => navigate('notifications'), accent: '#B892FF' },
+        { icon: Settings, label: 'Paramètres & RGPD', sub: '', onClick: () => navigate('settings'), accent: '#8B7BA8' },
+        { icon: Shield, label: 'Confidentialité', sub: '', onClick: () => navigate('settings'), accent: '#6C3DBA' },
+        { icon: LifeBuoy, label: 'Aide et support', sub: '', onClick: undefined, accent: '#8B7BA8' },
+      ]
+    }
+  ];
+
   return (
     <ScreenWrapper id="profile">
-      {/* Subtle lotus watermark */}
+      {/* Watermark */}
       <div className="absolute top-0 right-0 pointer-events-none opacity-[0.04] overflow-hidden">
         <img src={logoImg} alt="" aria-hidden className="w-44 h-44 object-contain translate-x-8 -translate-y-8"
           style={{ filter: 'brightness(0) saturate(0)' }} />
       </div>
 
-      <h1 className="text-2xl text-[#2D1B69] mb-8 font-serif relative z-10">Mon Profil</h1>
-      
-      <div className="flex flex-col items-center mb-10 relative z-10">
-        {/* Avatar with lotus badge */}
+      <h1 className="text-2xl text-[#2D1B69] mb-6 font-serif relative z-10">Mon Profil</h1>
+
+      {/* Avatar + Name */}
+      <div className="flex flex-col items-center mb-8 relative z-10">
         <div className="relative mb-4">
-          <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#B892FF] to-[#6C3DBA] flex items-center justify-center text-white text-2xl font-serif shadow-premium">
+          <motion.div
+            animate={{ boxShadow: ['0 0 0 0 rgba(228,176,8,0)', '0 0 0 8px rgba(228,176,8,0.15)', '0 0 0 0 rgba(228,176,8,0)'] }}
+            transition={{ duration: 2.5, repeat: Infinity }}
+            className="w-24 h-24 rounded-full bg-gradient-to-br from-[#B892FF] to-[#6C3DBA] flex items-center justify-center text-white text-2xl font-serif"
+          >
             NB
-          </div>
+          </motion.div>
           <div className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-white flex items-center justify-center shadow-[0_4px_12px_rgba(108,61,186,0.2)]">
             <img src={logoImg} alt="" className="w-6 h-6 object-contain"
               style={{ filter: 'drop-shadow(0 0 4px rgba(228,176,8,0.5))' }} />
           </div>
         </div>
         <h2 className="text-xl text-[#2D1B69] font-serif">Nour Benali</h2>
-        <div className="flex items-center gap-1.5 mt-1">
+        <div className="flex items-center gap-1.5 mt-1 bg-[#FFF8E4] border border-[#E4B008]/25 px-3 py-1 rounded-full">
           <Star size={12} className="text-[#E4B008]" fill="currentColor" />
-          <p className="text-[#8B7BA8] text-sm">Membre Premium</p>
+          <span className="text-[#C49B00] text-xs font-semibold">Membre Premium</span>
         </div>
 
-        {/* Stats row */}
-        <div className="flex gap-6 mt-6 w-full justify-center">
+        {/* Stats */}
+        <div className="flex gap-4 mt-5 w-full justify-center">
           {[
             { label: 'Jours', value: '47' },
             { label: 'Sessions', value: '12' },
-            { label: 'Humeur moy.', value: '✨' },
+            { label: 'Série', value: '🔥 23j' },
           ].map(stat => (
-            <motion.div
-              key={stat.label}
-              whileHover={{ y: -2 }}
-              className="flex flex-col items-center glass-card rounded-2xl px-4 py-3"
-            >
-              <span className="text-xl font-serif text-[#6C3DBA] font-semibold">{stat.value}</span>
+            <motion.div key={stat.label} whileHover={{ y: -2 }}
+              className="flex flex-col items-center glass-card rounded-2xl px-4 py-3 border border-[#E9D8FF]/60">
+              <span className="text-lg font-serif text-[#6C3DBA] font-semibold">{stat.value}</span>
               <span className="text-[10px] text-[#8B7BA8] mt-0.5">{stat.label}</span>
             </motion.div>
           ))}
         </div>
       </div>
 
-      <div className="space-y-3 mb-8">
-        {[
-          { icon: Settings, label: 'Paramètres du compte' },
-          { icon: Shield, label: 'Confidentialité et données' },
-          { icon: Star, label: 'Gérer mon abonnement', onClick: () => navigate('premium') },
-          { icon: LifeBuoy, label: 'Aide et support' },
-        ].map((item, i) => {
-          const Icon = item.icon;
-          return (
-            <div key={i} onClick={item.onClick} className="glass-card rounded-2xl p-4 flex items-center gap-4 cursor-pointer hover:border-[#B892FF]/30 transition-colors">
-              <div className="w-10 h-10 rounded-full bg-[#E9D8FF] flex items-center justify-center text-[#6C3DBA]">
-                <Icon size={20} />
-              </div>
-              <span className="flex-1 font-medium text-[#2D1B69]">{item.label}</span>
-              <ChevronRight size={20} className="text-[#8B7BA8]" />
-            </div>
-          )
-        })}
-
-        <div className="glass-card rounded-2xl p-4 flex items-center gap-4">
-          <div className="w-10 h-10 rounded-full bg-[#E9D8FF] flex items-center justify-center text-[#6C3DBA]">
-            <Heart size={20} />
-          </div>
-          <span className="flex-1 font-medium text-[#2D1B69]">Rappels quotidiens</span>
-          <div 
-            onClick={() => setReminders(!reminders)}
-            className={`w-12 h-6 rounded-full flex items-center px-1 cursor-pointer transition-colors ${reminders ? 'bg-[#B892FF]' : 'bg-[#E9D8FF]'}`}
-          >
-            <div className={`w-4 h-4 rounded-full bg-white transition-transform ${reminders ? 'translate-x-6' : 'translate-x-0'}`}></div>
-          </div>
+      {/* Reminder toggle */}
+      <div className="glass-card rounded-2xl p-4 flex items-center gap-4 mb-5 border border-[#E9D8FF]/50">
+        <div className="w-10 h-10 rounded-full bg-[#EDE4FF] flex items-center justify-center text-[#6C3DBA]">
+          <Zap size={18} />
         </div>
+        <span className="flex-1 font-medium text-[#2D1B69] text-sm">Rappels quotidiens</span>
+        <motion.div
+          whileTap={{ scale: 0.9 }}
+          onClick={() => setReminders(r => !r)}
+          className={`w-12 h-6 rounded-full flex items-center px-1 cursor-pointer transition-colors ${reminders ? 'bg-[#B892FF]' : 'bg-[#E9D8FF]'}`}>
+          <motion.div animate={{ x: reminders ? 24 : 0 }} transition={SPRING}
+            className="w-4 h-4 rounded-full bg-white shadow" />
+        </motion.div>
       </div>
 
-      <button onClick={() => navigate('onboarding')} className="w-full glass-card border border-rose-200 text-rose-500 py-4 rounded-2xl font-medium flex items-center justify-center gap-2 mt-auto hover:bg-rose-50 transition-colors">
+      {/* Menu sections */}
+      {menuSections.map(section => (
+        <div key={section.title} className="mb-5">
+          <h3 className="text-xs font-bold text-[#8B7BA8] uppercase tracking-wider mb-2 px-1">{section.title}</h3>
+          <div className="space-y-2">
+            {section.items.map((item, i) => {
+              const Icon = item.icon;
+              return (
+                <motion.div key={i} whileTap={{ scale: 0.98 }}
+                  onClick={item.onClick}
+                  className="glass-card rounded-2xl p-4 flex items-center gap-4 cursor-pointer border border-[#E9D8FF]/50">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center"
+                    style={{ backgroundColor: `${item.accent}22` }}>
+                    <Icon size={18} style={{ color: item.accent }} />
+                  </div>
+                  <div className="flex-1">
+                    <span className="font-medium text-[#2D1B69] text-sm">{item.label}</span>
+                    {item.sub && <p className="text-[10px] text-[#8B7BA8] mt-0.5">{item.sub}</p>}
+                  </div>
+                  <ChevronRight size={18} className="text-[#C4B5D4]" />
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+
+      {/* Logout */}
+      <motion.button whileTap={{ scale: 0.97 }}
+        onClick={() => navigate('onboarding')}
+        className="w-full glass-card border border-rose-200 text-rose-500 py-4 rounded-2xl font-medium flex items-center justify-center gap-2 hover:bg-rose-50 transition-colors">
         <LogOut size={20} />
         Déconnexion
-      </button>
+      </motion.button>
     </ScreenWrapper>
   );
 };

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Home, Calendar, Smile, User, BatteryMedium } from 'lucide-react';
 import * as Screens from './screens';
+import * as Screens2 from './screens2';
 import LandingPage from './LandingPage';
 import logoImg from '@assets/logo_1779998926197.png';
 
@@ -16,7 +17,12 @@ export type ScreenId =
   | 'community'
   | 'practitioners'
   | 'premium'
-  | 'profile';
+  | 'profile'
+  | 'notifications'
+  | 'achievements'
+  | 'settings'
+  | 'report'
+  | 'moodhistory';
 
 type Phase = 'splash' | 'landing' | 'app';
 
@@ -41,7 +47,6 @@ function SplashScreen({ onDone }: { onDone: () => void }) {
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}
     >
-      {/* Ambient radial glow */}
       <motion.div
         animate={{ scale: [1, 1.22, 1], opacity: [0.35, 0.75, 0.35] }}
         transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
@@ -53,7 +58,6 @@ function SplashScreen({ onDone }: { onDone: () => void }) {
           pointerEvents: 'none',
         }}
       />
-      {/* Lotus ring */}
       <motion.div
         animate={{ scale: [0.9, 1.55], opacity: [0.3, 0] }}
         transition={{ duration: 3, repeat: Infinity, ease: 'easeOut' }}
@@ -65,11 +69,9 @@ function SplashScreen({ onDone }: { onDone: () => void }) {
           pointerEvents: 'none',
         }}
       />
-
       <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 10 }}>
         <motion.img
-          src={logoImg}
-          alt="EndoSoul"
+          src={logoImg} alt="EndoSoul"
           initial={{ scale: 0.45, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.2, duration: 1.3, ease: EASE_OUT }}
@@ -109,7 +111,8 @@ function App() {
   const [phase, setPhase] = useState<Phase>('splash');
   const [currentScreen, setCurrentScreen] = useState<ScreenId>('onboarding');
 
-  const showNav = !['onboarding', 'auth', 'serenity'].includes(currentScreen);
+  const FULLSCREEN_SCREENS: ScreenId[] = ['onboarding', 'auth', 'serenity', 'premium'];
+  const showNav = !FULLSCREEN_SCREENS.includes(currentScreen);
 
   const navigate = (screen: ScreenId) => setCurrentScreen(screen);
 
@@ -120,6 +123,15 @@ function App() {
     { id: 'community',  icon: Smile,    label: 'Humeur',     center: false },
     { id: 'profile',    icon: User,     label: 'Profil',     center: false },
   ];
+
+  const getNavActive = (id: string): boolean => {
+    if (currentScreen === id) return true;
+    if (id === 'dashboard'  && ['symptoms', 'notifications', 'moodhistory'].includes(currentScreen)) return true;
+    if (id === 'community'  && currentScreen === 'community') return true;
+    if (id === 'meditation' && currentScreen === 'serenity') return true;
+    if (id === 'profile'    && ['practitioners', 'achievements', 'settings', 'report', 'premium'].includes(currentScreen)) return true;
+    return false;
+  };
 
   return (
     <AnimatePresence mode="wait">
@@ -159,17 +171,22 @@ function App() {
 
           <div className="flex-1 relative">
             <AnimatePresence mode="wait">
-              {currentScreen === 'onboarding'   && <Screens.Onboarding   key="onboarding"   navigate={navigate} />}
-              {currentScreen === 'auth'         && <Screens.Auth          key="auth"         navigate={navigate} />}
-              {currentScreen === 'dashboard'    && <Screens.Dashboard     key="dashboard"    navigate={navigate} />}
-              {currentScreen === 'cycle'        && <Screens.Cycle         key="cycle"        navigate={navigate} />}
-              {currentScreen === 'symptoms'     && <Screens.Symptoms      key="symptoms"     navigate={navigate} />}
-              {currentScreen === 'meditation'   && <Screens.Meditation    key="meditation"   navigate={navigate} />}
-              {currentScreen === 'serenity'     && <Screens.Serenity      key="serenity"     navigate={navigate} />}
-              {currentScreen === 'community'    && <Screens.Community     key="community"    navigate={navigate} />}
-              {currentScreen === 'practitioners'&& <Screens.Practitioners key="practitioners" navigate={navigate} />}
-              {currentScreen === 'premium'      && <Screens.Premium       key="premium"      navigate={navigate} />}
-              {currentScreen === 'profile'      && <Screens.Profile       key="profile"      navigate={navigate} />}
+              {currentScreen === 'onboarding'    && <Screens.Onboarding     key="onboarding"    navigate={navigate} />}
+              {currentScreen === 'auth'          && <Screens.Auth            key="auth"          navigate={navigate} />}
+              {currentScreen === 'dashboard'     && <Screens.Dashboard       key="dashboard"     navigate={navigate} />}
+              {currentScreen === 'cycle'         && <Screens.Cycle           key="cycle"         navigate={navigate} />}
+              {currentScreen === 'symptoms'      && <Screens.Symptoms        key="symptoms"      navigate={navigate} />}
+              {currentScreen === 'meditation'    && <Screens.Meditation      key="meditation"    navigate={navigate} />}
+              {currentScreen === 'serenity'      && <Screens.Serenity        key="serenity"      navigate={navigate} />}
+              {currentScreen === 'community'     && <Screens.Community       key="community"     navigate={navigate} />}
+              {currentScreen === 'practitioners' && <Screens.Practitioners   key="practitioners" navigate={navigate} />}
+              {currentScreen === 'premium'       && <Screens.Premium         key="premium"       navigate={navigate} />}
+              {currentScreen === 'profile'       && <Screens.Profile         key="profile"       navigate={navigate} />}
+              {currentScreen === 'notifications' && <Screens2.Notifications  key="notifications" navigate={navigate} />}
+              {currentScreen === 'achievements'  && <Screens2.Achievements   key="achievements"  navigate={navigate} />}
+              {currentScreen === 'settings'      && <Screens2.Settings       key="settings"      navigate={navigate} />}
+              {currentScreen === 'report'        && <Screens2.MonthlyReport  key="report"        navigate={navigate} />}
+              {currentScreen === 'moodhistory'   && <Screens2.MoodHistory    key="moodhistory"   navigate={navigate} />}
             </AnimatePresence>
           </div>
 
@@ -185,12 +202,7 @@ function App() {
               >
                 <div className="flex justify-between items-end">
                   {navItems.map((item) => {
-                    const isActive =
-                      currentScreen === item.id ||
-                      (item.id === 'dashboard'  && currentScreen === 'symptoms') ||
-                      (item.id === 'community'  && currentScreen === 'community') ||
-                      (item.id === 'meditation' && currentScreen === 'serenity') ||
-                      (item.id === 'profile'    && ['practitioners', 'premium'].includes(currentScreen));
+                    const isActive = getNavActive(item.id);
 
                     if (item.center) {
                       return (
@@ -215,12 +227,8 @@ function App() {
                                 : 'linear-gradient(135deg, #7C4DCC 0%, #4A2899 100%)',
                             }}
                           >
-                            <img
-                              src={logoImg}
-                              alt="Méditation"
-                              className="w-8 h-8 object-contain"
-                              style={{ filter: 'brightness(0) invert(1)' }}
-                            />
+                            <img src={logoImg} alt="Méditation" className="w-8 h-8 object-contain"
+                              style={{ filter: 'brightness(0) invert(1)' }} />
                           </motion.div>
                           <span className={`text-[10px] font-medium ${isActive ? 'text-[#E4B008]' : 'text-[#8B7BA8]'}`}>
                             {item.label}
@@ -236,9 +244,7 @@ function App() {
                         onClick={() => navigate(item.id as ScreenId)}
                         data-testid={`nav-${item.id}`}
                         whileTap={{ scale: 0.85 }}
-                        className={`flex flex-col items-center gap-1 transition-colors relative ${
-                          isActive ? 'text-[#6C3DBA]' : 'text-[#8B7BA8]'
-                        }`}
+                        className={`flex flex-col items-center gap-1 transition-colors relative ${isActive ? 'text-[#6C3DBA]' : 'text-[#8B7BA8]'}`}
                       >
                         <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
                         <span className="text-[10px] font-medium">{item.label}</span>
