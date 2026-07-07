@@ -1542,19 +1542,24 @@ export const Premium = ({ navigate }: { navigate: (s: ScreenId) => void }) => {
       <div className="mx-6 mb-6 relative z-10">
         <div className="rounded-[32px] p-6" style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.18)', backdropFilter: 'blur(20px)' }}>
           <div className="text-center mb-6">
+            {/* 30-day trial badge */}
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full mb-3"
+              style={{ background: 'rgba(228,176,8,0.18)', border: '1px solid rgba(228,176,8,0.35)' }}>
+              <span className="text-[#E4B008] text-[10px] font-bold tracking-wide">✦ Essai gratuit 30 jours</span>
+            </div>
             <div className="text-5xl font-serif text-white mb-1">
               <span style={{ background: 'linear-gradient(135deg, #FAE88A, #E4B008)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                {billing === 'year' ? '7,49€' : '14,99€'}
+                {billing === 'year' ? '7,49 €' : '14,99 €'}
               </span>
               <span className="text-lg text-white/50 font-sans">/mois</span>
             </div>
             {billing === 'year' && (
               <p className="text-white/50 text-xs">
-                Facturé 89,99€/an · <span className="text-[#E4B008]">Économisez 90€</span>
+                Facturé 89,99 €/an · <span className="text-[#E4B008]">Économisez 90 €</span>
               </p>
             )}
             {billing === 'month' && (
-              <p className="text-white/50 text-xs mt-1">Sans engagement · Mensuel</p>
+              <p className="text-white/50 text-xs mt-1">14,99 €/mois · Sans engagement</p>
             )}
           </div>
 
@@ -1580,11 +1585,11 @@ export const Premium = ({ navigate }: { navigate: (s: ScreenId) => void }) => {
             onClick={() => {}}
             className="w-full py-4 rounded-full text-white font-bold text-base relative overflow-hidden"
             style={{ background: 'linear-gradient(135deg, #E4B008 0%, #C49B00 100%)', boxShadow: '0 8px 32px rgba(228,176,8,0.45)' }}>
-            {billing === 'year' ? 'Commencer · 89,99 €/an' : 'Commencer · 14,99 €/mois'}
+            {billing === 'year' ? 'Démarrer — 89,99 €/an' : 'Démarrer — 14,99 €/mois'}
           </motion.button>
 
           <p className="text-center text-white/30 text-[10px] mt-3">
-            Annulable à tout moment · Paiement sécurisé
+            30 jours gratuits · Annulable à tout moment · Paiement sécurisé
           </p>
         </div>
       </div>

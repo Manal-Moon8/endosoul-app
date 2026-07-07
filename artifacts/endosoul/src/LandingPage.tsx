@@ -458,7 +458,7 @@ const LandingPage = ({ onEnterApp }: LandingPageProps) => {
               </div>
 
               <div className="mb-8">
-                <span className="font-serif text-5xl text-white">9,99€</span>
+                <span className="font-serif text-5xl text-white">14,99 €</span>
                 <span className="text-white/30 text-lg ml-1">/mois</span>
               </div>
 
@@ -467,7 +467,7 @@ const LandingPage = ({ onEnterApp }: LandingPageProps) => {
                 className="relative group overflow-hidden rounded-full px-12 py-4 font-semibold text-[#030009] text-base shadow-[0_0_40px_rgba(228,176,8,0.4)]"
                 style={{ background: 'linear-gradient(135deg, #F5D060 0%, #E4B008 50%, #C7933A 100%)' }}
               >
-                <span className="relative z-10">Essai gratuit 7 jours</span>
+                <span className="relative z-10">Essai gratuit 30 jours</span>
                 <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 skew-x-12" />
               </button>
               <p className="text-white/20 text-xs mt-4">Sans engagement · Annulation à tout moment</p>
