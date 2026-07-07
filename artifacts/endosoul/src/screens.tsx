@@ -10,6 +10,7 @@ import {
 import { FaGoogle, FaApple } from 'react-icons/fa';
 import { ScreenId } from './App';
 import logoImg from '@assets/logo_1779998926197.png';
+import lotusImg from '@assets/logo_1783415224293.png';
 import { useAmbientAudio } from './useAmbientAudio';
 import {
   MOOD_HISTORY, PRACTITIONERS, COMMUNITY_POSTS, STORIES,
@@ -111,29 +112,20 @@ export const Onboarding = ({ navigate }: { navigate: (s: ScreenId) => void }) =>
 
   const slides = [
     {
-      icon: '🌙',
-      emoji: true,
-      title: 'Comprends ton cycle',
-      subtitle: 'Phase par phase',
-      desc: "Identifie chaque phase de ton cycle, anticipe les crises et comprends les signaux de ton corps.",
+      title: 'Comprendre ton cycle',
+      desc: "Suivez votre santé simplement.",
       color: '#B892FF',
       bg: 'linear-gradient(170deg, #04000F 0%, #130535 35%, #2A1266 65%, #4A2899 85%, #6B3DBE 100%)',
     },
     {
-      icon: '📊',
-      emoji: true,
-      title: 'Suis tes symptômes',
-      subtitle: 'Chaque jour compte',
-      desc: "Note ta douleur, ton humeur et ta fatigue. Construis une cartographie précise de ta santé.",
+      title: 'Suivre vos symptômes',
+      desc: "Visualisez votre évolution chaque jour.",
       color: '#E4B008',
       bg: 'linear-gradient(170deg, #0A0020 0%, #1E0A50 35%, #3A1A80 65%, #5A2DAA 85%, #8A5DDA 100%)',
     },
     {
-      icon: '✨',
-      emoji: true,
-      title: 'Retrouve ton bien-être',
-      subtitle: 'Méditation & soutien',
-      desc: "Méditations guidées, praticiens spécialisés et une communauté bienveillante qui te comprend vraiment.",
+      title: 'Retrouver votre bien-être',
+      desc: "Méditation, soutien et praticiens spécialisés.",
       color: '#E4B008',
       bg: 'linear-gradient(170deg, #080015 0%, #150430 35%, #2D1B69 65%, #7C4DCC 85%, #A882F0 100%)',
     },
@@ -192,36 +184,32 @@ export const Onboarding = ({ navigate }: { navigate: (s: ScreenId) => void }) =>
           transition={{ duration: 0.45, ease: EASE_OUT }}
           className="absolute inset-0 flex flex-col items-center justify-center px-8 pb-24 z-10"
         >
-          {/* Large illustration */}
+          {/* Large lotus illustration */}
           <motion.div
-            initial={{ scale: 0.6, opacity: 0 }}
+            initial={{ scale: 0.55, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.1, duration: 0.7, ease: EASE_OUT }}
-            className="w-32 h-32 rounded-full flex items-center justify-center mb-8"
-            style={{
-              background: 'rgba(255,255,255,0.08)',
-              backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255,255,255,0.14)',
-              boxShadow: `0 0 60px ${slide.color}30, 0 20px 40px rgba(0,0,0,0.3)`,
-            }}
+            transition={{ delay: 0.08, duration: 0.85, ease: EASE_OUT }}
+            className="relative mb-8 flex items-center justify-center"
           >
-            <span className="text-6xl">{slide.icon}</span>
+            <motion.div
+              animate={{ scale: [1, 1.12, 1], opacity: [0.3, 0.6, 0.3] }}
+              transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+              className="absolute w-64 h-64 rounded-full"
+              style={{ background: `radial-gradient(circle, ${slide.color}25 0%, transparent 70%)` }}
+            />
+            <img
+              src={lotusImg}
+              alt=""
+              aria-hidden
+              className="w-52 h-52 object-contain relative z-10"
+              style={{ filter: `drop-shadow(0 0 32px ${slide.color}60) drop-shadow(0 8px 24px rgba(0,0,0,0.4))` }}
+            />
           </motion.div>
-
-          <motion.p
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.5 }}
-            className="text-[10px] tracking-[0.35em] uppercase mb-2"
-            style={{ color: `${slide.color}CC` }}
-          >
-            {slide.subtitle}
-          </motion.p>
 
           <motion.h1
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.28, duration: 0.6, ease: EASE_OUT }}
+            transition={{ delay: 0.22, duration: 0.6, ease: EASE_OUT }}
             className="text-3xl font-serif text-white text-center mb-4 leading-tight"
           >
             {slide.title}
@@ -230,8 +218,8 @@ export const Onboarding = ({ navigate }: { navigate: (s: ScreenId) => void }) =>
           <motion.p
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.38, duration: 0.6 }}
-            className="text-white/55 text-center text-sm leading-relaxed max-w-[270px]"
+            transition={{ delay: 0.32, duration: 0.6 }}
+            className="text-white/60 text-center text-base leading-relaxed max-w-[260px]"
           >
             {slide.desc}
           </motion.p>
@@ -303,77 +291,118 @@ export const Auth = ({ navigate }: { navigate: (s: ScreenId) => void }) => (
     animate={{ opacity: 1 }}
     exit={{ opacity: 0, scale: 0.97 }}
     transition={{ duration: 0.5, ease: EASE_OUT }}
-    className="absolute inset-0 bg-gradient-to-b from-[#EDE4FF] via-[#F5F0FF] to-[#FAF7FF] flex flex-col pt-24 pb-8 rounded-[36px]"
+    className="absolute inset-0 flex flex-col rounded-[36px] overflow-hidden"
+    style={{ background: 'linear-gradient(170deg, #08001E 0%, #1E0545 30%, #2D1B69 60%, #F5F0FF 100%)' }}
   >
+    {/* Ambient glow behind lotus */}
     <motion.div
-      initial={{ opacity: 0, y: 30, scale: 0.96 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ delay: 0.15, duration: 0.7, ease: EASE_OUT }}
-      className="mx-4 flex-1 glass-card rounded-[36px] p-8 flex flex-col"
-    >
-      <motion.div
-        initial={{ scale: 0.6, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ delay: 0.35, duration: 0.9, ease: EASE_OUT }}
-        className="flex justify-center mb-4"
-      >
-        <img src={logoImg} alt="EndoSoul" className="w-16 h-16 object-contain"
-          style={{ filter: 'drop-shadow(0 0 10px rgba(228,176,8,0.4))' }} />
-      </motion.div>
-      <motion.h2
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5, duration: 0.6, ease: EASE_OUT }}
-        className="text-2xl text-[#6C3DBA] text-center mb-10 font-serif"
-      >
-        Bienvenue
-      </motion.h2>
+      animate={{ scale: [1, 1.15, 1], opacity: [0.5, 0.85, 0.5] }}
+      transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+      className="absolute top-0 left-1/2 -translate-x-1/2 w-72 h-72 rounded-full pointer-events-none"
+      style={{ background: 'radial-gradient(circle, rgba(184,146,255,0.35) 0%, rgba(228,176,8,0.15) 40%, transparent 70%)' }}
+    />
 
-      <div className="space-y-4 flex-1">
+    {/* Hero — Lotus illustration top half */}
+    <div className="relative flex-shrink-0 flex justify-center items-end" style={{ height: '46%' }}>
+      <motion.img
+        src={lotusImg}
+        alt=""
+        aria-hidden
+        initial={{ scale: 0.7, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        transition={{ duration: 1.1, ease: EASE_OUT }}
+        className="w-72 h-72 object-contain"
+        style={{ filter: 'drop-shadow(0 0 48px rgba(184,146,255,0.7)) drop-shadow(0 16px 32px rgba(0,0,0,0.5))' }}
+      />
+    </div>
+
+    {/* Bottom card */}
+    <motion.div
+      initial={{ opacity: 0, y: 40 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.25, duration: 0.7, ease: EASE_OUT }}
+      className="flex-1 mx-3 mb-3 rounded-[36px] flex flex-col px-8 pt-7 pb-6"
+      style={{ background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(40px)' }}
+    >
+      {/* Logo + brand */}
+      <div className="flex flex-col items-center mb-6">
+        <motion.img
+          src={logoImg}
+          alt="EndoSoul"
+          initial={{ scale: 0.6, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.45, duration: 0.8, ease: EASE_OUT }}
+          className="w-14 h-14 object-contain mb-2"
+          style={{ filter: 'drop-shadow(0 0 12px rgba(228,176,8,0.55))' }}
+        />
+        <motion.p
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6, duration: 0.6 }}
+          className="font-serif text-[#6C3DBA] text-lg text-center leading-snug"
+        >
+          Lumière sur ta guérison
+        </motion.p>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.5 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.72, duration: 0.7, ease: EASE_OUT }}
+          className="mt-3 w-5 h-5"
+        >
+          <img src={logoImg} alt="" aria-hidden className="w-full h-full object-contain"
+            style={{ filter: 'sepia(1) saturate(4) hue-rotate(-20deg) brightness(0.85) drop-shadow(0 0 4px rgba(228,176,8,0.6))' }} />
+        </motion.div>
+      </div>
+
+      {/* Auth buttons */}
+      <div className="space-y-3 flex-1">
         <motion.button
-          initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6, duration: 0.5, ease: EASE_OUT }}
-          whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.75, duration: 0.5 }}
+          whileTap={{ scale: 0.97 }}
           data-testid="btn-google"
           onClick={() => navigate('dashboard')}
-          className="w-full flex items-center justify-center gap-3 bg-white border border-[#E9D8FF] text-[#2D1B69] py-4 rounded-2xl shadow-sm"
+          className="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 text-[#2D1B69] py-3.5 rounded-2xl shadow-sm"
+          style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.07)' }}
         >
-          <FaGoogle className="text-[#DB4437]" size={20} />
-          <span className="font-medium">Continuer avec Google</span>
+          <FaGoogle className="text-[#DB4437]" size={18} />
+          <span className="font-semibold text-sm">Continuer avec Google</span>
         </motion.button>
 
         <motion.button
-          initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7, duration: 0.5, ease: EASE_OUT }}
-          whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.82, duration: 0.5 }}
+          whileTap={{ scale: 0.97 }}
           data-testid="btn-apple"
           onClick={() => navigate('dashboard')}
-          className="w-full flex items-center justify-center gap-3 bg-[#1A1A2E] text-white py-4 rounded-2xl shadow-sm"
+          className="w-full flex items-center justify-center gap-3 bg-[#1A1A1E] text-white py-3.5 rounded-2xl"
+          style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.18)' }}
         >
-          <FaApple size={22} />
-          <span className="font-medium">Continuer avec Apple</span>
+          <FaApple size={20} />
+          <span className="font-semibold text-sm">Continuer avec Apple</span>
         </motion.button>
 
-        <div className="flex items-center gap-4 py-2">
+        <div className="flex items-center gap-3 py-1">
           <div className="h-px bg-[#E9D8FF] flex-1" />
-          <span className="text-sm text-[#8B7BA8]">ou</span>
+          <span className="text-xs text-[#8B7BA8]">ou</span>
           <div className="h-px bg-[#E9D8FF] flex-1" />
         </div>
 
         <motion.button
-          initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8, duration: 0.5, ease: EASE_OUT }}
-          whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.9, duration: 0.5 }}
+          whileTap={{ scale: 0.97 }}
           data-testid="btn-email"
           onClick={() => navigate('dashboard')}
-          className="w-full bg-gradient-to-r from-[#B892FF] to-[#6C3DBA] text-white py-4 rounded-2xl font-medium shadow-sm"
+          className="w-full py-3.5 rounded-2xl font-semibold text-sm text-white"
+          style={{ background: 'linear-gradient(135deg, #B892FF 0%, #6C3DBA 100%)', boxShadow: '0 6px 20px rgba(108,61,186,0.3)' }}
         >
-          {"S'inscrire avec email"}
+          {"S'inscrire avec e-mail"}
         </motion.button>
       </div>
 
-      <p className="text-[10px] text-center text-[#8B7BA8] mt-6 leading-relaxed">
-        En continuant, vous acceptez nos Conditions d'utilisation et notre Politique de confidentialité conforme au RGPD.
+      <p className="text-[10px] text-center text-[#8B7BA8] mt-4 leading-relaxed">
+        En continuant, vous acceptez nos CGU et notre Politique de confidentialité RGPD.
       </p>
     </motion.div>
   </motion.div>
@@ -406,7 +435,7 @@ export const Dashboard = ({ navigate }: { navigate: (s: ScreenId) => void }) => 
       {/* Header */}
       <header className="mb-5 flex items-start justify-between relative z-10">
         <div>
-          <p className="text-[#8B7BA8] text-xs font-medium mb-0.5">Lundi 7 juillet 2025</p>
+          <p className="text-[#8B7BA8] text-xs font-medium mb-0.5">Lundi 7 juillet 2026</p>
           <h1 className="text-2xl text-[#2D1B69] font-serif flex items-center gap-2">
             Bonjour, Nour <span className="text-[#E4B008]">👋</span>
           </h1>
@@ -734,6 +763,58 @@ export const Cycle = ({ navigate }: { navigate: (s: ScreenId) => void }) => {
           <span className="text-[10px] text-[#6C3DBA] font-medium">↓ -1.2 vs semaine préc.</span>
         </div>
       </div>
+
+      {/* Conseil du jour */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3, duration: 0.5 }}
+        className="rounded-[24px] p-4 mb-4 flex items-start gap-3 border border-[#B892FF]/20"
+        style={{ background: 'linear-gradient(135deg, #EDE4FF 0%, #F5F0FF 100%)' }}
+      >
+        <div className="text-2xl shrink-0">🌙</div>
+        <div>
+          <p className="text-[10px] text-[#6C3DBA] font-bold uppercase tracking-wider mb-1">Conseil du jour · Phase folliculaire</p>
+          <p className="text-sm text-[#2D1B69] leading-relaxed font-medium">
+            {"C'est le bon moment pour l'activité douce : yoga, marche ou pilates. Ton énergie remonte !"}
+          </p>
+        </div>
+      </motion.div>
+
+      {/* Hydration reminder */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.35, duration: 0.5 }}
+        className="rounded-[24px] p-4 mb-4 flex items-center gap-4 border border-[#86C986]/25"
+        style={{ background: 'linear-gradient(135deg, #E4F5E4 0%, #F0FAF0 100%)' }}
+      >
+        <div className="text-2xl shrink-0">💧</div>
+        <div className="flex-1">
+          <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider mb-0.5">Hydratation</p>
+          <p className="text-sm text-[#2D1B69] font-medium">Bois 1,5 L d'eau aujourd'hui</p>
+          <p className="text-xs text-[#8B7BA8]">Réduit les crampes et les ballonnements</p>
+        </div>
+        <div className="text-right">
+          <div className="text-lg font-serif font-bold text-emerald-600">6/8</div>
+          <div className="text-[9px] text-[#8B7BA8]">verres</div>
+        </div>
+      </motion.div>
+
+      {/* Medical recommendation card */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4, duration: 0.5 }}
+        className="rounded-[24px] p-4 mb-5 flex items-start gap-3 border border-[#E4B008]/20"
+        style={{ background: 'linear-gradient(135deg, #FFF8E4 0%, #FFFBF0 100%)' }}
+      >
+        <div className="text-2xl shrink-0">🩺</div>
+        <div>
+          <p className="text-[10px] text-[#C49B00] font-bold uppercase tracking-wider mb-1">Recommandation médicale</p>
+          <p className="text-sm text-[#2D1B69] leading-relaxed font-medium">
+            Pensez à prendre votre antalgique préventif 2 jours avant vos prochaines règles.
+          </p>
+          <button className="mt-2 text-xs text-[#E4B008] font-semibold">Planifier un rappel →</button>
+        </div>
+      </motion.div>
 
       {/* Phase symptoms */}
       <h3 className="text-base font-semibold text-[#2D1B69] mb-3">Symptômes fréquents</h3>
@@ -1103,6 +1184,8 @@ export const Community = ({ navigate }: { navigate: (s: ScreenId) => void }) => 
   const [savedPosts, setSavedPosts] = useState<Set<number>>(new Set([3]));
   const [newPost, setNewPost] = useState('');
 
+  const [activeFeed, setActiveFeed] = useState<'tendances' | 'recents' | 'populaires'>('tendances');
+  const [searchQ, setSearchQ] = useState('');
   const tags = ['Tous', '#Témoignage', '#Soutien', '#Victoires', '#Conseils'];
 
   const toggleLike = (id: number) => setLikedPosts(s => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
@@ -1113,7 +1196,46 @@ export const Community = ({ navigate }: { navigate: (s: ScreenId) => void }) => 
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl text-[#2D1B69] font-serif">Communauté</h1>
         <div className="flex items-center gap-1.5 bg-[#EDE4FF] text-[#6C3DBA] px-3 py-1.5 rounded-full text-xs font-semibold">
-          <TrendingUp size={12} /> Tendances
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          247 en ligne
+        </div>
+      </div>
+
+      {/* Search bar */}
+      <div className="glass-card flex items-center gap-2.5 px-4 py-3 rounded-2xl mb-4 border border-[#E9D8FF]/60">
+        <Search size={16} className="text-[#C4B5D4] shrink-0" />
+        <input
+          value={searchQ}
+          onChange={e => setSearchQ(e.target.value)}
+          placeholder="Rechercher dans la communauté…"
+          className="flex-1 bg-transparent text-sm text-[#2D1B69] placeholder:text-[#C4B5D4] focus:outline-none"
+        />
+      </div>
+
+      {/* Feed tabs */}
+      <div className="flex gap-2 mb-4">
+        {([
+          { id: 'tendances', label: '🔥 Tendances' },
+          { id: 'recents', label: '🕐 Récents' },
+          { id: 'populaires', label: '⭐ Populaires' },
+        ] as const).map(tab => (
+          <motion.button key={tab.id} whileTap={{ scale: 0.93 }}
+            onClick={() => setActiveFeed(tab.id)}
+            className={`flex-1 py-2 rounded-full text-[11px] font-semibold transition-all ${activeFeed === tab.id ? 'bg-[#6C3DBA] text-white shadow-[0_4px_14px_rgba(108,61,186,0.3)]' : 'glass-card text-[#8B7BA8] border border-[#E9D8FF]'}`}>
+            {tab.label}
+          </motion.button>
+        ))}
+      </div>
+
+      {/* Pinned post */}
+      <div className="rounded-2xl p-4 mb-4 border border-[#E4B008]/25 flex items-start gap-3"
+        style={{ background: 'linear-gradient(135deg, #FFF8E4 0%, #FFFBF0 100%)' }}>
+        <div className="text-lg shrink-0">📌</div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[10px] text-[#C49B00] font-bold uppercase tracking-wide mb-1">Post épinglé · Admin</p>
+          <p className="text-sm font-medium text-[#2D1B69] leading-snug">
+            Bienvenue dans la communauté EndoSoul 💜 Partagez en toute bienveillance.
+          </p>
         </div>
       </div>
 
@@ -1506,14 +1628,17 @@ export const Premium = ({ navigate }: { navigate: (s: ScreenId) => void }) => {
           <div className="text-center mb-6">
             <div className="text-5xl font-serif text-white mb-1">
               <span style={{ background: 'linear-gradient(135deg, #FAE88A, #E4B008)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                {billing === 'year' ? '6,49€' : '9,99€'}
+                {billing === 'year' ? '7,49€' : '14,99€'}
               </span>
               <span className="text-lg text-white/50 font-sans">/mois</span>
             </div>
             {billing === 'year' && (
               <p className="text-white/50 text-xs">
-                Facturé 77,88€/an · <span className="text-[#E4B008]">Économisez 42€</span>
+                Facturé 89,99€/an · <span className="text-[#E4B008]">Économisez 90€</span>
               </p>
+            )}
+            {billing === 'month' && (
+              <p className="text-white/50 text-xs mt-1">Sans engagement · Mensuel</p>
             )}
           </div>
 
@@ -1536,14 +1661,51 @@ export const Premium = ({ navigate }: { navigate: (s: ScreenId) => void }) => {
           </ul>
 
           <motion.button whileTap={{ scale: 0.97 }}
+            onClick={() => {}}
             className="w-full py-4 rounded-full text-white font-bold text-base relative overflow-hidden"
             style={{ background: 'linear-gradient(135deg, #E4B008 0%, #C49B00 100%)', boxShadow: '0 8px 32px rgba(228,176,8,0.45)' }}>
-            Essai gratuit · 7 jours
+            {billing === 'year' ? 'Commencer · 89,99 €/an' : 'Commencer · 14,99 €/mois'}
           </motion.button>
 
           <p className="text-center text-white/30 text-[10px] mt-3">
-            Sans engagement · Annulable à tout moment
+            Annulable à tout moment · Paiement sécurisé
           </p>
+        </div>
+      </div>
+
+      {/* Comparison table */}
+      <div className="mx-6 mb-6 relative z-10">
+        <h3 className="text-white/70 text-xs uppercase tracking-widest font-semibold text-center mb-4">Gratuit vs Premium</h3>
+        <div className="rounded-[24px] overflow-hidden border border-white/10">
+          <div className="grid grid-cols-3 text-center text-[10px] font-bold uppercase tracking-wider py-2.5 px-4"
+            style={{ background: 'rgba(255,255,255,0.06)' }}>
+            <div className="text-white/40 text-left">Fonctionnalité</div>
+            <div className="text-white/50">Gratuit</div>
+            <div style={{ background: 'linear-gradient(135deg, #FAE88A, #E4B008)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Premium</div>
+          </div>
+          {[
+            { feat: 'Suivi cycle', free: true, prem: true },
+            { feat: 'Journal symptômes', free: '5/mois', prem: 'Illimité' },
+            { feat: 'Méditations', free: '2 sessions', prem: '50+ sessions' },
+            { feat: 'Praticiens', free: false, prem: true },
+            { feat: 'Rapports PDF', free: false, prem: true },
+            { feat: 'Communauté privée', free: false, prem: true },
+            { feat: 'Sans publicité', free: false, prem: true },
+          ].map((row, i) => (
+            <div key={i} className={`grid grid-cols-3 text-center py-3 px-4 border-t border-white/8 ${i % 2 === 0 ? '' : ''}`}
+              style={{ background: i % 2 === 0 ? 'rgba(255,255,255,0.03)' : 'transparent' }}>
+              <div className="text-white/60 text-[11px] text-left">{row.feat}</div>
+              <div className="text-[11px]">
+                {row.free === true ? <span className="text-emerald-400">✓</span>
+                  : row.free === false ? <span className="text-white/20">✗</span>
+                  : <span className="text-white/40">{row.free}</span>}
+              </div>
+              <div className="text-[11px]">
+                {row.prem === true ? <span className="text-[#E4B008]">✦</span>
+                  : <span className="text-[#E4B008]">{row.prem}</span>}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -1612,7 +1774,7 @@ export const Profile = ({ navigate }: { navigate: (s: ScreenId) => void }) => {
               style={{ filter: 'drop-shadow(0 0 4px rgba(228,176,8,0.5))' }} />
           </div>
         </div>
-        <h2 className="text-xl text-[#2D1B69] font-serif">Nour Benali</h2>
+        <h2 className="text-xl text-[#2D1B69] font-serif">Nour</h2>
         <div className="flex items-center gap-1.5 mt-1 bg-[#FFF8E4] border border-[#E4B008]/25 px-3 py-1 rounded-full">
           <Star size={12} className="text-[#E4B008]" fill="currentColor" />
           <span className="text-[#C49B00] text-xs font-semibold">Membre Premium</span>
