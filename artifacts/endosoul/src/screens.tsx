@@ -11,6 +11,7 @@ import { FaGoogle, FaApple } from 'react-icons/fa';
 import { ScreenId } from './App';
 import logoImg from '@assets/logo_1779998926197.png';
 import lotusImg from '@assets/logo_1783415224293.png';
+import lotusNew from '@assets/louts_1783418758036.png';
 import { useAmbientAudio } from './useAmbientAudio';
 import {
   MOOD_HISTORY, PRACTITIONERS, COMMUNITY_POSTS, STORIES,
@@ -105,125 +106,192 @@ const HealthRing = ({ score }: { score: number }) => {
 };
 
 /* ─────────────────────────────────────────────────────────────────
-   ONBOARDING — single premium welcome screen
+   ONBOARDING — cinematic lotus-opening intro
+   Phase 0: lotus alone, dark/tiny (closed)  0 – 2.6s
+   Phase 1: lotus blooms, golden glow emerges           → 3.0s
+   Phase 2: gold logo fades from center                 → 3.8s
+   Phase 3: brand text fades in                         → 4.6s
+   Phase 4: "Commencer" button slides up                → 5.3s
 ───────────────────────────────────────────────────────────────── */
+const INTRO_PARTICLES = [
+  { x: '12%', y: '16%', s: 2, d: 0.3 },
+  { x: '80%', y: '10%', s: 1.5, d: 0.8 },
+  { x: '92%', y: '44%', s: 2.5, d: 0.5 },
+  { x: '6%',  y: '60%', s: 1.5, d: 1.2 },
+  { x: '54%', y: '90%', s: 2, d: 0.9 },
+  { x: '33%', y: '32%', s: 1.5, d: 1.5 },
+  { x: '68%', y: '25%', s: 2, d: 0.2 },
+  { x: '20%', y: '80%', s: 2.5, d: 1.0 },
+  { x: '82%', y: '74%', s: 1.5, d: 0.4 },
+  { x: '46%', y: '8%',  s: 2, d: 0.7 },
+  { x: '74%', y: '86%', s: 2, d: 1.3 },
+  { x: '4%',  y: '28%', s: 1.5, d: 0.6 },
+];
+
 export const Onboarding = ({ navigate }: { navigate: (s: ScreenId) => void }) => (
   <motion.div
-    key="onboarding-wrapper"
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
-    exit={{ opacity: 0, scale: 0.97 }}
-    transition={{ duration: 0.5 }}
-    className="absolute inset-0 rounded-[36px] overflow-hidden flex flex-col"
-    style={{ background: 'linear-gradient(170deg, #04000F 0%, #130535 30%, #2D1B69 65%, #4A2899 100%)' }}
+    exit={{ opacity: 0 }}
+    transition={{ duration: 0.55 }}
+    className="absolute inset-0 rounded-[36px] overflow-hidden flex flex-col items-center justify-center"
+    style={{ background: 'linear-gradient(170deg, #04000F 0%, #0C0225 28%, #1B0848 56%, #2D1B69 100%)' }}
   >
-    {/* ── Lotus hero — fills top 55% ── */}
-    <div className="relative flex-shrink-0" style={{ height: '55%' }}>
-      {/* Ambient glow behind lotus */}
-      <motion.div
-        animate={{ scale: [1, 1.14, 1], opacity: [0.45, 0.8, 0.45] }}
-        transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-        className="absolute inset-0 pointer-events-none"
-        style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 80%, rgba(184,146,255,0.35) 0%, rgba(228,176,8,0.12) 50%, transparent 80%)' }}
+    {/* Floating gold particles */}
+    {INTRO_PARTICLES.map((p, i) => (
+      <motion.div key={i}
+        initial={{ opacity: 0, scale: 0 }}
+        animate={{ opacity: [0, 0.8, 0], scale: [0, 1, 0], y: [0, -26, -52] }}
+        transition={{ delay: 1.4 + p.d, duration: 2.6, repeat: Infinity, repeatDelay: p.d * 0.55, ease: 'easeOut' }}
+        style={{
+          position: 'absolute', left: p.x, top: p.y,
+          width: p.s, height: p.s, borderRadius: '50%',
+          background: '#E4B008', boxShadow: `0 0 ${p.s * 2.5}px rgba(228,176,8,0.9)`,
+          pointerEvents: 'none',
+        }}
       />
-      {/* Lotus photo — full width, cropped cleanly */}
+    ))}
+
+    {/* Breathing ambient glow */}
+    <motion.div
+      animate={{ scale: [1, 1.18, 1], opacity: [0.13, 0.3, 0.13] }}
+      transition={{ duration: 4.8, repeat: Infinity, ease: 'easeInOut' }}
+      style={{
+        position: 'absolute', top: '50%', left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: 360, height: 360, borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(184,146,255,0.28) 0%, rgba(108,61,186,0.12) 55%, transparent 80%)',
+        pointerEvents: 'none',
+      }}
+    />
+
+    {/* ── Lotus bloom container ── */}
+    <div style={{ position: 'relative', width: 280, height: 280, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+
+      {/* Dark center cap — covers the center while lotus is "closed" */}
+      <motion.div
+        initial={{ opacity: 1 }}
+        animate={{ opacity: 0 }}
+        transition={{ delay: 1.5, duration: 1.6, ease: EASE_OUT }}
+        style={{
+          position: 'absolute', zIndex: 3,
+          width: 145, height: 145, borderRadius: '50%',
+          background: 'radial-gradient(circle, #04000F 25%, rgba(4,0,15,0.75) 60%, transparent 100%)',
+          pointerEvents: 'none',
+        }}
+      />
+
+      {/* Warm golden light — emerges from center as lotus opens */}
+      <motion.div
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: 1.8, duration: 1.5, ease: EASE_OUT }}
+        style={{
+          position: 'absolute', zIndex: 2,
+          width: 110, height: 110, borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(228,176,8,0.72) 0%, rgba(228,176,8,0.3) 38%, rgba(184,146,255,0.12) 65%, transparent 100%)',
+          pointerEvents: 'none',
+        }}
+      />
+
+      {/* Lotus photo — blooms from a tiny dark seed to full open flower */}
       <motion.img
-        src={lotusImg}
+        src={lotusNew}
         alt=""
         aria-hidden
-        initial={{ scale: 1.12, opacity: 0 }}
+        initial={{ scale: 0.14, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 1.2, ease: EASE_OUT }}
-        className="w-full h-full object-cover object-center"
-        style={{ filter: 'drop-shadow(0 20px 40px rgba(45,27,105,0.9))' }}
+        transition={{
+          scale:   { delay: 0.18, duration: 2.5, ease: EASE_OUT },
+          opacity: { delay: 0.18, duration: 1.2 },
+        }}
+        style={{
+          width: 270, height: 270, objectFit: 'contain',
+          position: 'absolute', zIndex: 1,
+          filter: 'drop-shadow(0 0 38px rgba(228,176,8,0.5)) drop-shadow(0 0 70px rgba(184,146,255,0.28))',
+        }}
       />
-      {/* Bottom vignette to blend into card */}
-      <div
-        className="absolute bottom-0 inset-x-0 h-28 pointer-events-none"
-        style={{ background: 'linear-gradient(to bottom, transparent, #2D1B69)' }}
-      />
-    </div>
 
-    {/* ── Bottom card ── */}
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.3, duration: 0.8, ease: EASE_OUT }}
-      className="flex-1 flex flex-col items-center px-8 pt-4 pb-8"
-    >
-      {/* Logo icon + brand */}
+      {/* Official EndoSoul logo — appears from the heart of the flower */}
       <motion.img
         src={logoImg}
         alt="EndoSoul"
-        initial={{ scale: 0.5, opacity: 0 }}
+        initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        transition={{ delay: 0.5, duration: 0.8, ease: EASE_OUT }}
-        className="w-12 h-12 object-contain mb-3"
-        style={{ filter: 'drop-shadow(0 0 16px rgba(228,176,8,0.8))' }}
+        transition={{ delay: 3.0, duration: 1.0, ease: EASE_OUT }}
+        style={{
+          width: 60, height: 60, objectFit: 'contain',
+          position: 'absolute', zIndex: 4,
+          filter: 'drop-shadow(0 0 18px rgba(228,176,8,1)) drop-shadow(0 0 38px rgba(228,176,8,0.55))',
+        }}
       />
+    </div>
 
-      <motion.h1
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.65, duration: 0.6 }}
-        className="font-serif text-white text-3xl font-medium mb-1 text-center"
-      >
+    {/* Brand text — fades in after logo reveals */}
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 3.9, duration: 0.9, ease: EASE_OUT }}
+      style={{ textAlign: 'center', marginTop: 26, paddingLeft: 32, paddingRight: 32 }}
+    >
+      <h1 style={{
+        fontFamily: "'Playfair Display', serif",
+        color: 'white', fontSize: '2.05rem', fontWeight: 500, marginBottom: 5,
+        textShadow: '0 0 28px rgba(184,146,255,0.3)',
+      }}>
         EndoSoul
-      </motion.h1>
+      </h1>
 
       <motion.p
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.78, duration: 0.6 }}
-        className="text-[#E4B008] text-[11px] tracking-[0.28em] uppercase mb-5 text-center"
+        transition={{ delay: 4.4, duration: 0.75 }}
+        style={{
+          color: 'rgba(228,176,8,0.92)', fontSize: '0.7rem',
+          letterSpacing: '0.26em', textTransform: 'uppercase', marginBottom: 10,
+        }}
       >
         Lumière sur ta guérison
       </motion.p>
 
       <motion.p
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.9, duration: 0.6 }}
-        className="text-white/60 text-[13px] text-center leading-relaxed mb-6 max-w-[280px]"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 4.75, duration: 0.75 }}
+        style={{
+          color: 'rgba(255,255,255,0.42)', fontSize: '0.76rem',
+          lineHeight: 1.65, maxWidth: 230, margin: '0 auto',
+        }}
       >
-        Suivez votre cycle, comprenez vos symptômes, prenez soin de votre bien-être et avancez avec un accompagnement personnalisé.
+        Application FemTech dédiée à l'accompagnement des femmes atteintes d'endométriose.
       </motion.p>
-
-      {/* CTA buttons */}
-      <motion.div
-        initial={{ opacity: 0, y: 14 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.05, duration: 0.6 }}
-        className="w-full flex flex-col gap-3"
-      >
-        <motion.button
-          whileTap={{ scale: 0.96 }}
-          data-testid="btn-commencer"
-          onClick={() => navigate('auth')}
-          className="w-full py-4 rounded-full font-semibold text-[15px] text-white"
-          style={{
-            background: 'linear-gradient(135deg, #7C4DCC 0%, #4A2899 100%)',
-            boxShadow: '0 8px 32px rgba(108,61,186,0.45)',
-            border: '1px solid rgba(184,146,255,0.25)',
-          }}
-        >
-          Commencer
-        </motion.button>
-
-        <motion.button
-          whileTap={{ scale: 0.96 }}
-          onClick={() => navigate('auth')}
-          className="w-full py-4 rounded-full font-semibold text-[15px] text-white/70"
-          style={{
-            background: 'rgba(255,255,255,0.07)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255,255,255,0.14)',
-          }}
-        >
-          Se connecter
-        </motion.button>
-      </motion.div>
     </motion.div>
+
+    {/* Commencer — single premium button */}
+    <motion.button
+      initial={{ opacity: 0, y: 22 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 5.3, duration: 0.75, ease: EASE_OUT }}
+      whileTap={{ scale: 0.95 }}
+      data-testid="btn-commencer"
+      onClick={() => navigate('auth')}
+      style={{
+        marginTop: 32,
+        padding: '15px 52px',
+        borderRadius: 999,
+        fontFamily: 'inherit',
+        fontWeight: 600,
+        fontSize: '0.95rem',
+        color: 'white',
+        background: 'linear-gradient(135deg, #7C4DCC 0%, #4A2899 100%)',
+        boxShadow: '0 8px 32px rgba(108,61,186,0.5), 0 0 0 1px rgba(184,146,255,0.2)',
+        border: 'none',
+        cursor: 'pointer',
+        letterSpacing: '0.02em',
+      }}
+    >
+      Commencer
+    </motion.button>
   </motion.div>
 );
 

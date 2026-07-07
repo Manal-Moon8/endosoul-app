@@ -204,7 +204,7 @@ function SplashScreen({ onDone }: { onDone: () => void }) {
 
 function App() {
   const [phase, setPhase] = useState<Phase>('splash');
-  const [currentScreen, setCurrentScreen] = useState<ScreenId>('auth');
+  const [currentScreen, setCurrentScreen] = useState<ScreenId>('onboarding');
 
   const FULLSCREEN_SCREENS: ScreenId[] = ['onboarding', 'auth', 'serenity', 'premium'];
   const showNav = !FULLSCREEN_SCREENS.includes(currentScreen);
